@@ -70,9 +70,9 @@ vite-plugins/
 enriquece):
 
 ```
-vacante, candidato, transcripcion[], aprobado, puntaje,
-resumen, fortalezas[], areasDeMejora[], creadoEn,
-estadoProceso, notas, vacanteId   ← agregados por este dashboard
+vacante, vacanteId, candidato, cedula, celular, transcripcion[],
+aprobado, puntaje, resumen, fortalezas[], areasDeMejora[], creadoEn,
+estadoProceso, notas   ← estadoProceso y notas los agrega este dashboard
 ```
 
 **`vacantes`** (la crea y administra por completo este dashboard):
@@ -132,8 +132,10 @@ tres entornos (Development, Preview, Production).
 
 ## Nota sobre el vínculo con el agente de voz
 
-El agente de voz genera `entrevistas.vacante` como texto libre y no conoce
-todavía la colección `vacantes` de este dashboard. Mientras esa integración
-no se haga del lado del agente de voz, las entrevistas nuevas se vinculan
-manualmente a su vacante real desde la ficha de cada entrevista en este
-dashboard (selector "Vacante vinculada").
+El agente de voz ahora arma el plan de la entrevista a partir de una vacante
+real seleccionada de la colección `vacantes`, y guarda tanto `vacante`
+(título, texto libre) como `vacanteId` (el `_id` real) en cada entrevista
+nueva — el vínculo queda hecho automáticamente, sin pasos manuales. El
+selector "Vacante vinculada" en la ficha de cada entrevista sigue existiendo
+para corregir un vínculo o para entrevistas antiguas, previas a este cambio,
+que solo tienen el texto libre.

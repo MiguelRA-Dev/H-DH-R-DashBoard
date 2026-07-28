@@ -68,6 +68,28 @@ export default function InterviewDetail() {
         </div>
       </div>
 
+      {(entrevista.cedula || entrevista.celular) && (
+        <div className="detail-card contact-card">
+          <h3>Contacto</h3>
+          <div className="contact-grid">
+            <div>
+              <span className="contact-label">Cédula</span>
+              <span className="contact-value">{entrevista.cedula || "—"}</span>
+            </div>
+            <div>
+              <span className="contact-label">Celular</span>
+              <span className="contact-value">
+                {entrevista.celular ? (
+                  <a href={`tel:${entrevista.celular}`}>{entrevista.celular}</a>
+                ) : (
+                  "—"
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="detail-card link-vacante-card">
         <h3>Vacante vinculada</h3>
         <Select
