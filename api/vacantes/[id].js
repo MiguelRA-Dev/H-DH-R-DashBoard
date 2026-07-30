@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getVacantesCollection } from "../_lib/mongodb.js";
+import { requireAuth } from "../_lib/auth.js";
 
 const ESTADOS_VALIDOS = ["abierta", "pausada", "cerrada"];
 const CAMPOS_EDITABLES = [
@@ -14,6 +15,8 @@ const CAMPOS_EDITABLES = [
 ];
 
 export default async function handler(request, response) {
+  if (!requireAuth(request, response)) return;
+
   const { id } = request.query;
   if (!ObjectId.isValid(id)) {
     return response.status(400).json({ error: "Id inválido" });

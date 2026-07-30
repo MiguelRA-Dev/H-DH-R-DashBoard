@@ -33,3 +33,8 @@ export async function getVacantesCollection() {
   const client = await clientPromise;
   return client.db("agente_voz").collection("vacantes");
 }
+
+export async function getUsuariosCollection() {
+  const client = await clientPromise;
+  return client.db("agente_voz").collection("usuarios");
+}

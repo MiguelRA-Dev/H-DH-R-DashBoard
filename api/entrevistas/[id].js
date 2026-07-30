@@ -1,9 +1,12 @@
 import { ObjectId } from "mongodb";
 import { getEntrevistasCollection, getVacantesCollection } from "../_lib/mongodb.js";
+import { requireAuth } from "../_lib/auth.js";
 
 const ESTADOS_PROCESO_VALIDOS = ["pendiente", "en_revision", "contratado", "descartado"];
 
 export default async function handler(request, response) {
+  if (!requireAuth(request, response)) return;
+
   const { id } = request.query;
   if (!ObjectId.isValid(id)) {
     return response.status(400).json({ error: "Id inválido" });

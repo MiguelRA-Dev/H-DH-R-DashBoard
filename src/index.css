@@ -765,6 +765,72 @@ button.danger-outline:hover {
   filter: brightness(0.95);
 }
 
+/* ---------- Login / arranque de primera cuenta ---------- */
+
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 2px;
+  letter-spacing: -0.01em;
+}
+
+.login-subtitle {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+
+.login-hint {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+/* ---------- Usuario actual (topbar) ---------- */
+
+.usuario-actual {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ---------- Usuarios ---------- */
+
+.usuarios-table {
+  margin-bottom: 28px;
+}
+
+.usuarios-table tbody tr {
+  cursor: default;
+}
+
+.usuarios-form-wrap {
+  margin: 0;
+}
+
+.usuarios-form-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
 /* ---------- Vacante form ---------- */
 
 .page-narrow {
@@ -788,6 +854,8 @@ button.danger-outline:hover {
 }
 
 .vacante-form input[type="text"],
+.vacante-form input[type="email"],
+.vacante-form input[type="password"],
 .vacante-form textarea {
   display: block;
   width: 100%;

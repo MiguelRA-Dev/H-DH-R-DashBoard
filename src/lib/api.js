@@ -14,6 +14,30 @@ function json(method, body) {
   };
 }
 
+export function login(email, password) {
+  return request("/api/auth/login", json("POST", { email, password }));
+}
+
+export function logout() {
+  return request("/api/auth/logout", { method: "POST" });
+}
+
+export function getMe() {
+  return request("/api/auth/me");
+}
+
+export function getEstadoAuth() {
+  return request("/api/auth/estado");
+}
+
+export function getUsuarios() {
+  return request("/api/usuarios");
+}
+
+export function crearUsuario(data) {
+  return request("/api/usuarios", json("POST", data));
+}
+
 export function getStats() {
   return request("/api/stats");
 }

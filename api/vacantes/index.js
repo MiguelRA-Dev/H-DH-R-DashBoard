@@ -1,9 +1,12 @@
 import { getVacantesCollection } from "../_lib/mongodb.js";
 import { buildVacantesFilter } from "../_lib/filters.js";
+import { requireAuth } from "../_lib/auth.js";
 
 const ESTADOS_VALIDOS = ["abierta", "pausada", "cerrada"];
 
 export default async function handler(request, response) {
+  if (!requireAuth(request, response)) return;
+
   const coleccion = await getVacantesCollection();
 
   if (request.method === "GET") {

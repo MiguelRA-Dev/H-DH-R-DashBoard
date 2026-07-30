@@ -1,10 +1,12 @@
 import { getEntrevistasCollection } from "../_lib/mongodb.js";
 import { buildEntrevistasFilter } from "../_lib/filters.js";
+import { requireAuth } from "../_lib/auth.js";
 
 export default async function handler(request, response) {
   if (request.method !== "GET") {
     return response.status(405).json({ error: "Método no permitido" });
   }
+  if (!requireAuth(request, response)) return;
 
   try {
     const coleccion = await getEntrevistasCollection();

@@ -8,6 +8,11 @@ import path from "node:path";
 // confundirlas — mismo orden de precedencia que usa Vercel entre ambas.
 const routes = [
   { pattern: /^\/api\/stats\/?$/, file: "api/stats.js", params: [] },
+  { pattern: /^\/api\/auth\/login\/?$/, file: "api/auth/login.js", params: [] },
+  { pattern: /^\/api\/auth\/logout\/?$/, file: "api/auth/logout.js", params: [] },
+  { pattern: /^\/api\/auth\/me\/?$/, file: "api/auth/me.js", params: [] },
+  { pattern: /^\/api\/auth\/estado\/?$/, file: "api/auth/estado.js", params: [] },
+  { pattern: /^\/api\/usuarios\/?$/, file: "api/usuarios/index.js", params: [] },
   { pattern: /^\/api\/entrevistas\/export\/?$/, file: "api/entrevistas/export.js", params: [] },
   { pattern: /^\/api\/entrevistas\/?$/, file: "api/entrevistas/index.js", params: [] },
   { pattern: /^\/api\/entrevistas\/([^/]+)\/?$/, file: "api/entrevistas/[id].js", params: ["id"] },
