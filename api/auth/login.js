@@ -21,7 +21,13 @@ export default async function handler(request, response) {
 
     const token = crearTokenSesion(usuario);
     escribirCookieSesion(response, token);
-    response.status(200).json({ nombre: usuario.nombre, email: usuario.email });
+    response.status(200).json({
+      id: usuario._id.toString(),
+      nombre: usuario.nombre,
+      email: usuario.email,
+      rol: usuario.rol || "admin",
+      debeCambiarPassword: Boolean(usuario.debeCambiarPassword),
+    });
   } catch (error) {
     console.error(error);
     response.status(500).json({ error: "Error al iniciar sesión" });

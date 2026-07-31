@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import ScoreBadge from "../components/ScoreBadge";
+import CompetencyMeters from "../components/CompetencyMeters";
 import TranscriptView from "../components/TranscriptView";
 import StatusSelect from "../components/StatusSelect";
 import NotesEditor from "../components/NotesEditor";
@@ -68,6 +69,31 @@ export default function InterviewDetail() {
         </div>
       </div>
 
+      {(entrevista.alertas?.cambiosPantalla > 0 || entrevista.alertas?.posibleUsoIA) && (
+        <div className="detail-card alert-card">
+          <h3>Alertas</h3>
+          <p className="alert-hint">
+            Señales automáticas para revisar con un acercamiento humano — no cambian el veredicto
+            de la IA ni el estado del proceso.
+          </p>
+          <div className="alert-list">
+            {entrevista.alertas.cambiosPantalla > 0 && (
+              <div className="alert-item alert-item-warning">
+                <strong>Cambios de pestaña/ventana:</strong> el candidato salió de la entrevista{" "}
+                {entrevista.alertas.cambiosPantalla}{" "}
+                {entrevista.alertas.cambiosPantalla === 1 ? "vez" : "veces"} durante la sesión.
+              </div>
+            )}
+            {entrevista.alertas.posibleUsoIA && (
+              <div className="alert-item alert-item-danger">
+                <strong>Posible uso de IA/internet:</strong>{" "}
+                {entrevista.alertas.justificacionUsoIA || "El evaluador detectó respuestas que no se sostuvieron al pedir un ejemplo concreto."}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {(entrevista.cedula || entrevista.celular) && (
         <div className="detail-card contact-card">
           <h3>Contacto</h3>
@@ -114,6 +140,14 @@ export default function InterviewDetail() {
 
         <div className="detail-card">
           <h3>Evaluación</h3>
+
+          {entrevista.competencias && (
+            <>
+              <CompetencyMeters competencias={entrevista.competencias} />
+              <div className="detail-card-spacer" />
+            </>
+          )}
+
           <p>{entrevista.resumen}</p>
 
           {entrevista.fortalezas?.length > 0 && (

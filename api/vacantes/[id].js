@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getVacantesCollection } from "../_lib/mongodb.js";
-import { requireAuth } from "../_lib/auth.js";
+import { requireAuth, requireAdmin } from "../_lib/auth.js";
 
 const ESTADOS_VALIDOS = ["abierta", "pausada", "cerrada"];
 const CAMPOS_EDITABLES = [
@@ -65,6 +65,9 @@ export default async function handler(request, response) {
   }
 
   if (request.method === "DELETE") {
+    // Borrar una vacante es la única acción destructiva de este recurso —
+    // reservada a admin, igual que gestionar el equipo (ver api/usuarios).
+    if (!requireAdmin(request, response)) return;
     try {
       const resultado = await coleccion.deleteOne({ _id });
       if (resultado.deletedCount === 0) {

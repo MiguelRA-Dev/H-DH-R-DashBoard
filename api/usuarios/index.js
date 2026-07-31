@@ -1,5 +1,12 @@
 import { getUsuariosCollection } from "../_lib/mongodb.js";
-import { hashPassword, crearTokenSesion, escribirCookieSesion, requireAuth } from "../_lib/auth.js";
+import {
+  hashPassword,
+  crearTokenSesion,
+  escribirCookieSesion,
+  requireAuth,
+  requireAdmin,
+  ROLES_VALIDOS,
+} from "../_lib/auth.js";
 
 export default async function handler(request, response) {
   if (request.method === "GET") {
@@ -20,12 +27,15 @@ export default async function handler(request, response) {
   }
 
   if (request.method === "POST") {
-    const { nombre, email, password } = request.body || {};
+    const { nombre, email, password, cargo, telefono, rol } = request.body || {};
     if (!nombre?.trim() || !email?.trim() || !password) {
       return response.status(400).json({ error: "Faltan campos obligatorios." });
     }
     if (password.length < 8) {
       return response.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
+    }
+    if (rol !== undefined && !ROLES_VALIDOS.includes(rol)) {
+      return response.status(400).json({ error: "Rol inválido." });
     }
 
     try {
@@ -34,11 +44,11 @@ export default async function handler(request, response) {
 
       // Crear una cuenta sin sesión solo está permitido si todavía no existe
       // NINGUNA (arranque inicial del dashboard). Habiendo al menos una, hace
-      // falta estar autenticado para agregar más gente del equipo — evita
-      // que cualquiera con la URL se autoregistre en el dashboard de RRHH.
+      // falta ser admin para agregar más gente del equipo — evita que
+      // cualquiera con la URL se autoregistre en el dashboard de RRHH.
       let esArranque = total === 0;
       if (!esArranque) {
-        const sesionActual = requireAuth(request, response);
+        const sesionActual = requireAdmin(request, response);
         if (!sesionActual) return;
       }
 
@@ -52,6 +62,11 @@ export default async function handler(request, response) {
         nombre: nombre.trim(),
         email: emailNormalizado,
         passwordHash: hashPassword(password),
+        cargo: cargo?.trim() || "",
+        telefono: telefono?.trim() || "",
+        // La cuenta fundadora siempre es admin, sin importar qué rol venga en el body.
+        rol: esArranque ? "admin" : rol || "reclutador",
+        debeCambiarPassword: false,
         creadoEn: new Date(),
       };
       const resultado = await coleccion.insertOne(nuevoUsuario);
@@ -59,6 +74,10 @@ export default async function handler(request, response) {
         _id: resultado.insertedId,
         nombre: nuevoUsuario.nombre,
         email: nuevoUsuario.email,
+        cargo: nuevoUsuario.cargo,
+        telefono: nuevoUsuario.telefono,
+        rol: nuevoUsuario.rol,
+        debeCambiarPassword: nuevoUsuario.debeCambiarPassword,
       };
 
       // Al primer usuario (arranque) lo dejamos con sesión iniciada de una

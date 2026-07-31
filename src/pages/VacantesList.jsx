@@ -77,28 +77,30 @@ export default function VacantesList() {
 
       {!loading && !error && resultado.items.length > 0 && (
         <>
-          <table className="interviews-table">
-            <thead>
-              <tr>
-                <th>Título</th>
-                <th>Departamento</th>
-                <th>Modalidad</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resultado.items.map((v) => (
-                <tr key={v._id} onClick={() => navigate(`/vacantes/${v._id}`)}>
-                  <td>{v.titulo}</td>
-                  <td className="cell-muted">{v.departamento || "—"}</td>
-                  <td className="cell-muted">{formatModalidad(v.modalidad)}</td>
-                  <td>
-                    <span className={`vacante-estado estado-${v.estado}`}>{v.estado}</span>
-                  </td>
+          <div className="table-scroll">
+            <table className="interviews-table">
+              <thead>
+                <tr>
+                  <th>Título</th>
+                  <th>Departamento</th>
+                  <th>Modalidad</th>
+                  <th>Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {resultado.items.map((v) => (
+                  <tr key={v._id} onClick={() => navigate(`/vacantes/${v._id}`)}>
+                    <td>{v.titulo}</td>
+                    <td className="cell-muted">{v.departamento || "—"}</td>
+                    <td className="cell-muted">{formatModalidad(v.modalidad)}</td>
+                    <td>
+                      <span className={`vacante-estado estado-${v.estado}`}>{v.estado}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {resultado.total > PAGE_SIZE && (
             <div className="pagination">

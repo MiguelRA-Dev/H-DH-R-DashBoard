@@ -7,7 +7,7 @@ import { formatModalidad } from "../lib/vacanteLabels";
 
 const ESTADOS = ["abierta", "pausada", "cerrada"];
 
-export default function VacanteDetail() {
+export default function VacanteDetail({ usuarioActual }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [vacante, setVacante] = useState(null);
@@ -88,9 +88,11 @@ export default function VacanteDetail() {
                 Marcar como {estado}
               </button>
             ))}
-            <button className="danger-outline" onClick={handleDelete}>
-              Eliminar
-            </button>
+            {usuarioActual?.rol === "admin" && (
+              <button className="danger-outline" onClick={handleDelete}>
+                Eliminar
+              </button>
+            )}
           </div>
 
           {vacante.descripcion && (
@@ -113,24 +115,26 @@ export default function VacanteDetail() {
           {candidatos.length === 0 ? (
             <div className="empty-state">Aún no hay entrevistas registradas para esta vacante.</div>
           ) : (
-            <table className="interviews-table">
-              <thead>
-                <tr>
-                  <th>Candidato</th>
-                  <th>Resultado IA</th>
-                </tr>
-              </thead>
-              <tbody>
-                {candidatos.map((c) => (
-                  <tr key={c._id} onClick={() => navigate(`/entrevistas/${c._id}`)}>
-                    <td>{c.candidato}</td>
-                    <td>
-                      <ScoreBadge aprobado={c.aprobado} puntaje={c.puntaje} />
-                    </td>
+            <div className="table-scroll">
+              <table className="interviews-table">
+                <thead>
+                  <tr>
+                    <th>Candidato</th>
+                    <th>Resultado IA</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {candidatos.map((c) => (
+                    <tr key={c._id} onClick={() => navigate(`/entrevistas/${c._id}`)}>
+                      <td>{c.candidato}</td>
+                      <td>
+                        <ScoreBadge aprobado={c.aprobado} puntaje={c.puntaje} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </>
       )}

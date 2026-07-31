@@ -38,6 +38,14 @@ export function crearUsuario(data) {
   return request("/api/usuarios", json("POST", data));
 }
 
+export function resetearPasswordUsuario(id) {
+  return request(`/api/usuarios/${id}`, json("PATCH", { accion: "resetPassword" }));
+}
+
+export function cambiarPassword(passwordActual, passwordNueva) {
+  return request("/api/auth/cambiar-password", json("POST", { passwordActual, passwordNueva }));
+}
+
 export function getStats() {
   return request("/api/stats");
 }

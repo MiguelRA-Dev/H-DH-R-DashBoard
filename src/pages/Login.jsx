@@ -13,6 +13,7 @@ export default function Login({ onAutenticado }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
+  const [mostrarAyudaPassword, setMostrarAyudaPassword] = useState(false);
 
   useEffect(() => {
     getEstadoAuth()
@@ -89,6 +90,25 @@ export default function Login({ onAutenticado }) {
         <button type="submit" className="primary" disabled={enviando}>
           {enviando ? "Ingresando…" : hayUsuarios ? "Ingresar" : "Crear cuenta y entrar"}
         </button>
+
+        {hayUsuarios && (
+          <div className="login-forgot">
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setMostrarAyudaPassword((v) => !v)}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+            {mostrarAyudaPassword && (
+              <p className="login-hint">
+                Pídele a un administrador del equipo que te la restablezca desde la pestaña
+                "Usuarios" del dashboard — te va a compartir una contraseña temporal y te pedirá
+                cambiarla en tu próximo ingreso.
+              </p>
+            )}
+          </div>
+        )}
       </form>
     </div>
   );

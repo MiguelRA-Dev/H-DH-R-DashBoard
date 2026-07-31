@@ -182,12 +182,17 @@ a {
 /* ---------- Topbar ---------- */
 
 .dash-topbar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 22px 32px;
   border-bottom: 1px solid var(--border);
+}
+
+.dash-topbar-title {
+  min-width: 0;
 }
 
 .dash-topbar h1 {
@@ -210,9 +215,78 @@ a {
   gap: 10px;
 }
 
+.dash-nav-panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .dash-nav {
   display: flex;
   gap: 4px;
+}
+
+/* En pantallas angostas, la nav/usuario/cerrar-sesión se esconden detrás del
+   botón de hamburguesa en vez de amontonarse — eso era lo que rompía el
+   topbar en celular. El toggle de tema se queda siempre visible afuera. */
+@media (max-width: 720px) {
+  .mobile-menu-toggle {
+    display: flex;
+  }
+
+  .dash-nav-panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 18px 18px;
+    box-shadow: 0 16px 32px var(--menu-shadow);
+    z-index: 40;
+  }
+
+  .dash-nav-panel.open {
+    display: flex;
+  }
+
+  .dash-nav {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .dash-nav a {
+    padding: 10px 12px;
+  }
+
+  .usuario-actual {
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+    padding: 12px 12px 0;
+  }
+
+  .dash-nav-panel button.secondary {
+    justify-content: center;
+    margin: 8px 0 0;
+  }
 }
 
 .dash-nav a {
@@ -382,6 +456,14 @@ a {
 
 /* ---------- Interviews table ---------- */
 
+/* Las tablas tienen más columnas de las que caben en un celular; en vez de
+   que la página entera se corra de lado, el scroll horizontal queda
+   contenido acá adentro. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .interviews-table {
   width: 100%;
   border-collapse: separate;
@@ -449,6 +531,120 @@ a {
   font-size: 14px;
 }
 
+/* ---------- Alert badges (anti-trampa) ---------- */
+
+.alert-badge {
+  display: inline-block;
+  margin: 0 4px 4px 0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.alert-badge-warning {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning);
+}
+
+.alert-badge-danger {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+}
+
+.alert-card {
+  margin-bottom: 20px;
+}
+
+.alert-hint {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alert-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.alert-item-warning {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+}
+
+.alert-item-danger {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+}
+
+/* ---------- Competency meters ---------- */
+
+.competency-meters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.competency-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.competency-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.competency-value {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.competency-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.competency-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.competency-fill-good {
+  background: var(--accent);
+}
+
+.competency-fill-warning {
+  background: var(--warning);
+}
+
+.competency-fill-danger {
+  background: var(--danger);
+}
+
+.detail-card-spacer {
+  height: 20px;
+}
+
 /* ---------- Score badge ---------- */
 
 .score-badge {
@@ -513,12 +709,17 @@ a {
   flex-wrap: wrap;
 }
 
+.detail-header > div:first-child {
+  min-width: 0;
+}
+
 .detail-header h2 {
   font-family: var(--font-display);
   font-size: 22px;
   font-weight: 700;
   margin: 0 0 4px;
   letter-spacing: -0.01em;
+  overflow-wrap: break-word;
 }
 
 .detail-header .detail-candidate {
@@ -680,7 +881,8 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px 16px;
+  flex-wrap: wrap;
   margin-bottom: 18px;
 }
 
@@ -812,16 +1014,56 @@ button.danger-outline:hover {
 
 /* ---------- Usuarios ---------- */
 
+.usuarios-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .usuarios-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* El sticky de la derecha solo tiene sentido en dos columnas — apilado no. */
+  .usuarios-form {
+    position: static;
+  }
+}
+
+/* La tabla puede crecer mucho con el equipo; en vez de estirar la página, se
+   vuelve su propia zona con scroll y el encabezado se queda fijo arriba. Así
+   el layout se ve igual de bien con 3 usuarios que con 300. */
+.usuarios-table-scroll {
+  max-height: 65vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 16px;
+}
+
 .usuarios-table {
-  margin-bottom: 28px;
+  margin-bottom: 0;
 }
 
 .usuarios-table tbody tr {
   cursor: default;
 }
 
-.usuarios-form-wrap {
+.usuarios-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+
+.usuarios-form {
   margin: 0;
+  /* Acompaña a la tabla mientras se hace scroll, en vez de quedar huérfano
+     arriba con un hueco vacío debajo cuando la lista de usuarios es larga. */
+  position: sticky;
+  top: 20px;
 }
 
 .usuarios-form-title {
@@ -829,6 +1071,87 @@ button.danger-outline:hover {
   font-size: 15px;
   font-weight: 700;
   margin: 0 0 16px;
+}
+
+.rol-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.rol-badge-admin {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+}
+
+.rol-badge-reclutador {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.link-button:disabled {
+  color: var(--text-dim);
+  cursor: default;
+  text-decoration: none;
+}
+
+.temp-password-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+}
+
+.temp-password-banner code {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.temp-password-banner > div {
+  flex: 1;
+}
+
+.temp-password-hint {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.login-forgot {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.login-forgot .login-hint {
+  margin-top: 10px;
 }
 
 /* ---------- Vacante form ---------- */
@@ -856,6 +1179,7 @@ button.danger-outline:hover {
 .vacante-form input[type="text"],
 .vacante-form input[type="email"],
 .vacante-form input[type="password"],
+.vacante-form input[type="tel"],
 .vacante-form textarea {
   display: block;
   width: 100%;
@@ -1140,5 +1464,25 @@ button.danger-outline:hover {
   .dash-shell {
     padding-left: 18px;
     padding-right: 18px;
+  }
+
+  .dash-shell {
+    padding-top: 20px;
+  }
+
+  .vacante-form {
+    padding: 20px;
+  }
+
+  .detail-card {
+    padding: 18px;
+  }
+
+  .kpi-card {
+    padding: 16px;
+  }
+
+  .vacante-form button.primary {
+    width: 100%;
   }
 }
