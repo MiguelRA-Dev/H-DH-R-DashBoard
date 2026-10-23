@@ -9,6 +9,7 @@ import Pipeline from "./pages/Pipeline";
 import Usuarios from "./pages/Usuarios";
 import Login from "./pages/Login";
 import CambiarPasswordForzado from "./pages/CambiarPasswordForzado";
+import SinLicencia from "./pages/SinLicencia";
 import Superadmin from "./pages/Superadmin";
 import ThemeToggle from "./components/ThemeToggle";
 import { useTheme } from "./hooks/useTheme";
@@ -59,6 +60,10 @@ export default function App() {
         onLogout={handleLogout}
       />
     );
+  }
+
+  if (!usuario.licenciaAsignada) {
+    return <SinLicencia onLogout={handleLogout} />;
   }
 
   return (

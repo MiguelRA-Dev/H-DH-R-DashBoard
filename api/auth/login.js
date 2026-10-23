@@ -27,6 +27,11 @@ export default async function handler(request, response) {
       email: usuario.email,
       rol: usuario.rol || "admin",
       debeCambiarPassword: Boolean(usuario.debeCambiarPassword),
+      // Sin esto, App.jsx usa esta respuesta directo (no vuelve a pedir
+      // /api/auth/me) y un usuario SÍ licenciado vería la pantalla de
+      // bloqueo hasta su próximo refresh — mismo patrón que
+      // debeCambiarPassword, que ya viaja acá por la misma razón.
+      licenciaAsignada: usuario.licenciaAsignada !== false,
     });
   } catch (error) {
     console.error(error);

@@ -3,7 +3,7 @@ import { getVacantesCollection } from "../_lib/mongodb.js";
 import { buildVacantesFilter } from "../_lib/filters.js";
 import { toCsv } from "../_lib/csv.js";
 import { formatModalidad } from "../_lib/modalidad.js";
-import { requireAuth } from "../_lib/auth.js";
+import { requireLicencia } from "../_lib/auth.js";
 
 const COLUMNS = [
   { label: "Título", value: (v) => v.titulo },
@@ -19,7 +19,7 @@ export default async function handler(request, response) {
   if (request.method !== "GET") {
     return response.status(405).json({ error: "Método no permitido" });
   }
-  const usuario = requireAuth(request, response);
+  const usuario = requireLicencia(request, response);
   if (!usuario) return;
 
   try {

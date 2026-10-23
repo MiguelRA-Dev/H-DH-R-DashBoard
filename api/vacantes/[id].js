@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getVacantesCollection } from "../_lib/mongodb.js";
-import { requireAuth, requireAdmin } from "../_lib/auth.js";
+import { requireLicencia, requireAdmin } from "../_lib/auth.js";
 
 const ESTADOS_VALIDOS = ["abierta", "pausada", "cerrada"];
 const IDIOMAS_VALIDOS = ["es", "en"];
@@ -20,7 +20,7 @@ const CAMPOS_EDITABLES = [
 const CAMPOS_SIN_VALOR_EN_HISTORIAL = ["descripcion", "requisitos"];
 
 export default async function handler(request, response) {
-  const usuario = requireAuth(request, response);
+  const usuario = requireLicencia(request, response);
   if (!usuario) return;
 
   const { id } = request.query;

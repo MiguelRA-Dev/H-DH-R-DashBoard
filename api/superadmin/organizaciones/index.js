@@ -16,9 +16,14 @@ export default async function handler(request, response) {
       const organizaciones = await organizacionesCol.find({}).sort({ creadoEn: -1 }).toArray();
 
       // Un solo aggregate para el uso de licencias de TODAS las organizaciones,
-      // en vez de una consulta de conteo por cada una.
+      // en vez de una consulta de conteo por cada una. Solo cuenta quienes
+      // tienen licencia asignada (ver usuarios.licenciaAsignada) — el cupo es
+      // un techo de licencias activas, no de cuentas que existen.
       const conteos = await usuariosCol
-        .aggregate([{ $group: { _id: { organizacionId: "$organizacionId", rol: "$rol" }, total: { $sum: 1 } } }])
+        .aggregate([
+          { $match: { licenciaAsignada: { $ne: false } } },
+          { $group: { _id: { organizacionId: "$organizacionId", rol: "$rol" }, total: { $sum: 1 } } },
+        ])
         .toArray();
 
       const usoPorOrg = new Map();

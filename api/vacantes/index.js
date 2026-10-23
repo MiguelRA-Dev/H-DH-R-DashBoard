@@ -1,13 +1,13 @@
 import { ObjectId } from "mongodb";
 import { getVacantesCollection } from "../_lib/mongodb.js";
 import { buildVacantesFilter } from "../_lib/filters.js";
-import { requireAuth } from "../_lib/auth.js";
+import { requireLicencia } from "../_lib/auth.js";
 
 const ESTADOS_VALIDOS = ["abierta", "pausada", "cerrada"];
 const IDIOMAS_VALIDOS = ["es", "en"];
 
 export default async function handler(request, response) {
-  const usuario = requireAuth(request, response);
+  const usuario = requireLicencia(request, response);
   if (!usuario) return;
 
   const coleccion = await getVacantesCollection();

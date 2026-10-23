@@ -3,7 +3,14 @@ import Select from "../components/Select";
 import ErrorState from "../components/ErrorState";
 import PasswordInput from "../components/PasswordInput";
 import LicenciaBarra from "../components/LicenciaBarra";
-import { getUsuarios, crearUsuario, resetearPasswordUsuario, actualizarOrganizacion } from "../lib/api";
+import {
+  getUsuarios,
+  crearUsuario,
+  resetearPasswordUsuario,
+  asignarLicenciaUsuario,
+  quitarLicenciaUsuario,
+  actualizarOrganizacion,
+} from "../lib/api";
 
 const ROLES = [
   { value: "admin", label: "Admin" },
@@ -12,7 +19,15 @@ const ROLES = [
 
 const ROL_LABEL = Object.fromEntries(ROLES.map((r) => [r.value, r.label]));
 
-const CAMPOS_VACIOS = { nombre: "", email: "", cargo: "", telefono: "", rol: "reclutador", password: "" };
+const CAMPOS_VACIOS = {
+  nombre: "",
+  email: "",
+  cargo: "",
+  telefono: "",
+  rol: "reclutador",
+  password: "",
+  asignarLicencia: true,
+};
 
 // Iniciales para el avatar: primera letra de las dos primeras palabras del
 // nombre (ej. "Miguel Angel Riaño" → "MA"), nunca más de dos para que quepan
@@ -34,6 +49,7 @@ export default function Usuarios({ usuarioActual }) {
   const [formError, setFormError] = useState(null);
   const [reseteando, setReseteando] = useState(null);
   const [passwordGenerada, setPasswordGenerada] = useState(null);
+  const [cambiandoLicencia, setCambiandoLicencia] = useState(null);
   const [marca, setMarca] = useState({
     nombre: usuarioActual?.organizacion?.nombre || "",
     logoUrl: usuarioActual?.organizacion?.logoUrl || "",
@@ -49,9 +65,13 @@ export default function Usuarios({ usuarioActual }) {
   // puestos contratados vs. cuántos ya están en uso) — se calcula del mismo
   // listado de usuarios que ya se trae para la lista de abajo, sin otra
   // llamada aparte. El cupo viene de /api/auth/me (ver organizacion.licencias).
+  // Cuenta solo quienes tienen licencia asignada: ya no todas las cuentas
+  // cuentan contra el cupo, solo las que de verdad tienen acceso.
   const licencias = usuarioActual?.organizacion?.licencias || { admin: 0, reclutador: 0 };
-  const usoAdmin = usuarios?.filter((u) => u.rol === "admin").length || 0;
-  const usoReclutador = usuarios?.filter((u) => (u.rol || "reclutador") === "reclutador").length || 0;
+  const tieneLicencia = (u) => u.licenciaAsignada !== false;
+  const usoAdmin = usuarios?.filter((u) => u.rol === "admin" && tieneLicencia(u)).length || 0;
+  const usoReclutador =
+    usuarios?.filter((u) => (u.rol || "reclutador") === "reclutador" && tieneLicencia(u)).length || 0;
 
   const cargar = () => {
     getUsuarios()
@@ -63,18 +83,42 @@ export default function Usuarios({ usuarioActual }) {
 
   const setField = (field) => (e) => setValues((v) => ({ ...v, [field]: e.target.value }));
 
+  // Cupo/uso del rol que está elegido AHORA en el formulario — determina si
+  // el checkbox de licencia se puede marcar de verdad o no.
+  const usoDelRolSeleccionado = values.rol === "admin" ? usoAdmin : usoReclutador;
+  const cupoDelRolSeleccionado = values.rol === "admin" ? licencias.admin : licencias.reclutador;
+  const hayLicenciaDisponible = usoDelRolSeleccionado < cupoDelRolSeleccionado;
+  const asignarLicenciaEfectivo = values.asignarLicencia && hayLicenciaDisponible;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
     setCreando(true);
     try {
-      await crearUsuario(values);
+      await crearUsuario({ ...values, asignarLicencia: asignarLicenciaEfectivo });
       setValues(CAMPOS_VACIOS);
       cargar();
     } catch (err) {
       setFormError(err.message);
     } finally {
       setCreando(false);
+    }
+  };
+
+  const handleToggleLicencia = async (usuario) => {
+    setError(null);
+    setCambiandoLicencia(usuario._id);
+    try {
+      if (tieneLicencia(usuario)) {
+        await quitarLicenciaUsuario(usuario._id);
+      } else {
+        await asignarLicenciaUsuario(usuario._id);
+      }
+      cargar();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCambiandoLicencia(null);
     }
   };
 
@@ -223,18 +267,38 @@ export default function Usuarios({ usuarioActual }) {
                       <span className={`rol-badge rol-badge-${u.rol || "admin"}`}>
                         {ROL_LABEL[u.rol] || "Admin"}
                       </span>
+                      <span className={`licencia-estado ${tieneLicencia(u) ? "con-licencia" : "sin-licencia"}`}>
+                        <span className="licencia-dot" />
+                        {tieneLicencia(u) ? "Con licencia" : "Sin licencia"}
+                      </span>
                     </div>
                   </div>
 
-                  {esAdmin && u._id !== miId && (
-                    <button
-                      type="button"
-                      className="link-button usuario-action"
-                      disabled={reseteando === u._id}
-                      onClick={() => handleReset(u)}
-                    >
-                      {reseteando === u._id ? "Restableciendo…" : "Restablecer contraseña"}
-                    </button>
+                  {esAdmin && (
+                    <div className="usuario-actions-col">
+                      <button
+                        type="button"
+                        className="link-button usuario-action"
+                        disabled={cambiandoLicencia === u._id}
+                        onClick={() => handleToggleLicencia(u)}
+                      >
+                        {cambiandoLicencia === u._id
+                          ? "Guardando…"
+                          : tieneLicencia(u)
+                          ? "Quitar licencia"
+                          : "Asignar licencia"}
+                      </button>
+                      {u._id !== miId && (
+                        <button
+                          type="button"
+                          className="link-button usuario-action"
+                          disabled={reseteando === u._id}
+                          onClick={() => handleReset(u)}
+                        >
+                          {reseteando === u._id ? "Restableciendo…" : "Restablecer contraseña"}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
@@ -282,6 +346,21 @@ export default function Usuarios({ usuarioActual }) {
                 minLength={8}
                 required
               />
+
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={asignarLicenciaEfectivo}
+                  disabled={!hayLicenciaDisponible}
+                  onChange={(e) => setValues((v) => ({ ...v, asignarLicencia: e.target.checked }))}
+                />
+                <span>Asignar licencia a esta persona</span>
+              </label>
+              <p className="cell-muted checkbox-hint">
+                {hayLicenciaDisponible
+                  ? "Sin esto, la cuenta queda creada pero sin acceso hasta que se le asigne una licencia."
+                  : `No hay cupo de ${values.rol === "admin" ? "administrador" : "reclutador"} disponible — la cuenta se crea sin licencia, se le puede asignar después si se libera un cupo.`}
+              </p>
 
               <button type="submit" className="primary compact" disabled={creando}>
                 {creando ? "Creando…" : "Crear cuenta"}

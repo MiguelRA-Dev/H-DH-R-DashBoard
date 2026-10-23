@@ -1,13 +1,13 @@
 import { ObjectId } from "mongodb";
 import { getEntrevistasCollection } from "../_lib/mongodb.js";
 import { buildEntrevistasFilter } from "../_lib/filters.js";
-import { requireAuth } from "../_lib/auth.js";
+import { requireLicencia } from "../_lib/auth.js";
 
 export default async function handler(request, response) {
   if (request.method !== "GET") {
     return response.status(405).json({ error: "Método no permitido" });
   }
-  const usuario = requireAuth(request, response);
+  const usuario = requireLicencia(request, response);
   if (!usuario) return;
 
   try {

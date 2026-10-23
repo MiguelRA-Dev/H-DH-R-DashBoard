@@ -69,6 +69,10 @@ export function crearTokenSesion(usuario) {
     // esto, es lo que separa los datos de un cliente de los de otro.
     organizacionId: usuario.organizacionId?.toString(),
     debeCambiarPassword: Boolean(usuario.debeCambiarPassword),
+    // Cuentas creadas antes de que existiera este campo (o la migración de
+    // licencias por usuario, ver scripts/migrar-licencias-asignadas.js) se
+    // tratan como licenciadas, para no dejar a nadie sin acceso de la nada.
+    licenciaAsignada: usuario.licenciaAsignada !== false,
     exp: Date.now() + SESION_DURACION_SEGUNDOS * 1000,
   });
   const payloadB64 = Buffer.from(payload).toString("base64url");
@@ -164,14 +168,34 @@ export function requireAuth(request, response) {
     rol: payload.rol || "admin",
     organizacionId: payload.organizacionId,
     debeCambiarPassword: Boolean(payload.debeCambiarPassword),
+    licenciaAsignada: payload.licenciaAsignada !== false,
   };
 }
 
-// Igual que requireAuth, pero además exige rol "admin". Se usa en las
-// acciones que solo debe poder hacer el equipo de administración del
-// dashboard: agregar/gestionar gente y borrar vacantes.
-export function requireAdmin(request, response) {
+// Igual que requireAuth, pero además exige que la cuenta tenga una licencia
+// asignada (ver organizacion.licencias y usuarios.licenciaAsignada) — sin
+// esto, un admin puede crear tantas cuentas como quiera (ver api/usuarios),
+// pero solo las licenciadas pueden de verdad usar la plataforma. Login,
+// logout y cambiar contraseña quedan afuera de esto a propósito: alguien sin
+// licencia todavía necesita poder enterarse, cerrar sesión o arreglar su
+// contraseña (ver api/auth/*).
+export function requireLicencia(request, response) {
   const usuario = requireAuth(request, response);
+  if (!usuario) return null;
+  if (!usuario.licenciaAsignada) {
+    response.status(403).json({
+      error: "Tu cuenta no tiene una licencia asignada. Contacta a un administrador de tu organización.",
+    });
+    return null;
+  }
+  return usuario;
+}
+
+// Igual que requireLicencia, pero además exige rol "admin". Se usa en las
+// acciones que solo debe poder hacer el equipo de administración del
+// dashboard: agregar/gestionar gente, licencias y borrar vacantes.
+export function requireAdmin(request, response) {
+  const usuario = requireLicencia(request, response);
   if (!usuario) return null;
   if (usuario.rol !== "admin") {
     response.status(403).json({ error: "Necesitas permisos de administrador para esto." });

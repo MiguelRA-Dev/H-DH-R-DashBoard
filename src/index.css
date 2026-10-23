@@ -1416,12 +1416,71 @@ button.danger-outline:hover {
   white-space: nowrap;
 }
 
+.usuario-actions-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.licencia-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.licencia-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.licencia-estado.con-licencia .licencia-dot {
+  background: var(--accent);
+}
+
+.licencia-estado.sin-licencia {
+  color: var(--text-dim);
+}
+.licencia-estado.sin-licencia .licencia-dot {
+  background: var(--text-dim);
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.checkbox-field input[type="checkbox"] {
+  margin-top: 3px;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.checkbox-field span {
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.checkbox-hint {
+  margin: 0 0 18px;
+}
+
 @media (max-width: 560px) {
   .usuario-card {
     flex-wrap: wrap;
   }
-  .usuario-action {
+  .usuario-actions-col {
     width: 100%;
+    align-items: stretch;
     margin-left: 56px;
   }
 }

@@ -1,10 +1,10 @@
 import { ObjectId } from "mongodb";
 import { getUsuariosCollection, getOrganizacionesCollection } from "../_lib/mongodb.js";
-import { hashPassword, requireAuth, requireAdmin, ROLES_VALIDOS } from "../_lib/auth.js";
+import { hashPassword, requireLicencia, requireAdmin, ROLES_VALIDOS } from "../_lib/auth.js";
 
 export default async function handler(request, response) {
   if (request.method === "GET") {
-    const usuario = requireAuth(request, response);
+    const usuario = requireLicencia(request, response);
     if (!usuario) return;
 
     try {
@@ -31,7 +31,7 @@ export default async function handler(request, response) {
     const admin = requireAdmin(request, response);
     if (!admin) return;
 
-    const { nombre, email, password, cargo, telefono, rol } = request.body || {};
+    const { nombre, email, password, cargo, telefono, rol, asignarLicencia } = request.body || {};
     if (!nombre?.trim() || !email?.trim() || !password) {
       return response.status(400).json({ error: "Faltan campos obligatorios." });
     }
@@ -45,23 +45,32 @@ export default async function handler(request, response) {
     try {
       const organizacionId = new ObjectId(admin.organizacionId);
       const rolNuevo = rol || "reclutador";
+      // Crear la cuenta nunca se bloquea por cupo — el cupo es un techo de
+      // cuántas cuentas pueden tener licencia asignada a la vez (estilo
+      // Azure AD/M365), no de cuántas cuentas pueden existir. Si no se pide
+      // licencia (o no hay cupo), la cuenta igual se crea, solo que sin
+      // acceso hasta que alguien se la asigne desde "Usuarios".
+      const quiereLicencia = asignarLicencia === true;
 
       const [organizacionesCol, coleccion] = await Promise.all([
         getOrganizacionesCollection(),
         getUsuariosCollection(),
       ]);
 
-      const organizacion = await organizacionesCol.findOne({ _id: organizacionId });
-      if (!organizacion) {
-        return response.status(404).json({ error: "No se encontró la organización de esta cuenta." });
-      }
-
-      const cupo = organizacion.licencias?.[rolNuevo] ?? 0;
-      const enUso = await coleccion.countDocuments({ organizacionId, rol: rolNuevo });
-      if (enUso >= cupo) {
-        return response.status(403).json({
-          error: `Ya se usaron las ${cupo} licencias de ${rolNuevo === "admin" ? "administrador" : "reclutador"} contratadas. Hay que ampliar el plan para agregar otra.`,
-        });
+      let licenciaAsignada = false;
+      if (quiereLicencia) {
+        const organizacion = await organizacionesCol.findOne({ _id: organizacionId });
+        if (!organizacion) {
+          return response.status(404).json({ error: "No se encontró la organización de esta cuenta." });
+        }
+        const cupo = organizacion.licencias?.[rolNuevo] ?? 0;
+        const enUso = await coleccion.countDocuments({ organizacionId, rol: rolNuevo, licenciaAsignada: true });
+        if (enUso >= cupo) {
+          return response.status(403).json({
+            error: `Ya se usaron las ${cupo} licencias de ${rolNuevo === "admin" ? "administrador" : "reclutador"} contratadas. Puedes crear la cuenta sin licencia, o ampliar el cupo.`,
+          });
+        }
+        licenciaAsignada = true;
       }
 
       const emailNormalizado = email.toLowerCase().trim();
@@ -78,6 +87,7 @@ export default async function handler(request, response) {
         cargo: cargo?.trim() || "",
         telefono: telefono?.trim() || "",
         rol: rolNuevo,
+        licenciaAsignada,
         debeCambiarPassword: false,
         creadoEn: new Date(),
       };
@@ -90,6 +100,7 @@ export default async function handler(request, response) {
         cargo: nuevoUsuario.cargo,
         telefono: nuevoUsuario.telefono,
         rol: nuevoUsuario.rol,
+        licenciaAsignada: nuevoUsuario.licenciaAsignada,
         debeCambiarPassword: nuevoUsuario.debeCambiarPassword,
       });
     } catch (error) {

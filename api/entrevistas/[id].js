@@ -1,11 +1,11 @@
 import { ObjectId } from "mongodb";
 import { getEntrevistasCollection, getVacantesCollection } from "../_lib/mongodb.js";
-import { requireAuth } from "../_lib/auth.js";
+import { requireLicencia } from "../_lib/auth.js";
 
 const ESTADOS_PROCESO_VALIDOS = ["pendiente", "en_revision", "contratado", "descartado"];
 
 export default async function handler(request, response) {
-  const usuario = requireAuth(request, response);
+  const usuario = requireLicencia(request, response);
   if (!usuario) return;
 
   const { id } = request.query;

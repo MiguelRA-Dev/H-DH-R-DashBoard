@@ -38,6 +38,14 @@ export function resetearPasswordUsuario(id) {
   return request(`/api/usuarios/${id}`, json("PATCH", { accion: "resetPassword" }));
 }
 
+export function asignarLicenciaUsuario(id) {
+  return request(`/api/usuarios/${id}`, json("PATCH", { accion: "asignarLicencia" }));
+}
+
+export function quitarLicenciaUsuario(id) {
+  return request(`/api/usuarios/${id}`, json("PATCH", { accion: "quitarLicencia" }));
+}
+
 export function cambiarPassword(passwordActual, passwordNueva) {
   return request("/api/auth/cambiar-password", json("POST", { passwordActual, passwordNueva }));
 }
