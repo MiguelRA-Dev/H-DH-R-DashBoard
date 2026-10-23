@@ -6,14 +6,19 @@ import TranscriptView from "../components/TranscriptView";
 import StatusSelect from "../components/StatusSelect";
 import NotesEditor from "../components/NotesEditor";
 import Select from "../components/Select";
+import ErrorState from "../components/ErrorState";
+import HistorialCambios from "../components/HistorialCambios";
 import { getEntrevista, patchEntrevista, getVacantes } from "../lib/api";
 
-export default function InterviewDetail() {
+export default function InterviewDetail({ usuarioActual }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [entrevista, setEntrevista] = useState(null);
   const [vacantes, setVacantes] = useState([]);
   const [error, setError] = useState(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const [transcripcionCompacta, setTranscripcionCompacta] = useState(false);
+  const retry = () => setReloadToken((t) => t + 1);
 
   useEffect(() => {
     setEntrevista(null);
@@ -21,7 +26,7 @@ export default function InterviewDetail() {
     getEntrevista(id)
       .then(setEntrevista)
       .catch((err) => setError(err.message));
-  }, [id]);
+  }, [id, reloadToken]);
 
   useEffect(() => {
     getVacantes({ pageSize: 100 })
@@ -44,7 +49,7 @@ export default function InterviewDetail() {
     setEntrevista(actualizada);
   };
 
-  if (error) return <div className="error-state">⚠️ {error}</div>;
+  if (error) return <ErrorState message={error} onRetry={retry} />;
   if (!entrevista) return <div className="loading-state">Cargando entrevista…</div>;
 
   const vacanteOptions = [
@@ -133,9 +138,20 @@ export default function InterviewDetail() {
       </div>
 
       <div className="detail-grid">
-        <div className="detail-card">
-          <h3>Transcripción</h3>
-          <TranscriptView transcripcion={entrevista.transcripcion} />
+        <div className={`detail-card${transcripcionCompacta ? " detail-card-align-start" : ""}`}>
+          <div className="detail-card-header-row">
+            <h3>Transcripción</h3>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setTranscripcionCompacta((v) => !v)}
+            >
+              {transcripcionCompacta ? "Expandir" : "Compactar"}
+            </button>
+          </div>
+          <div className={`transcript-scroll${transcripcionCompacta ? " compacto" : ""}`}>
+            <TranscriptView transcripcion={entrevista.transcripcion} />
+          </div>
         </div>
 
         <div className="detail-card">
@@ -176,6 +192,17 @@ export default function InterviewDetail() {
           <NotesEditor value={entrevista.notas} onSave={handleSaveNotas} />
         </div>
       </div>
+
+      {usuarioActual?.rol === "admin" && (
+        <div className="detail-card historial-card">
+          <h3>Historial de cambios</h3>
+          <p className="alert-hint">
+            Quién movió el estado, tocó las notas o cambió la vacante vinculada, y cuándo — solo
+            visible para administradores.
+          </p>
+          <HistorialCambios historial={entrevista.historial} />
+        </div>
+      )}
     </>
   );
 }

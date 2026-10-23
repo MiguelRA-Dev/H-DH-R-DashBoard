@@ -11,6 +11,35 @@ function formatFecha(iso) {
   });
 }
 
+function TabSwitchIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="2" y="2" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M7 11v1.5A1.5 1.5 0 0 0 8.5 14H13a1.5 1.5 0 0 0 1.5-1.5V8a1.5 1.5 0 0 0-1.5-1.5h-1.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function AlertTriangleIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M8 2.5 14.5 13.5h-13L8 2.5Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path d="M8 7v2.8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="8" cy="11.6" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
 // Resumen visual de las señales anti-trampa (ver README): cambios de
 // pestaña/ventana detectados en el cliente y sospecha de uso de IA marcada
 // por el evaluador. Es solo una pista para revisar, nunca reemplaza el
@@ -26,11 +55,13 @@ function AlertBadges({ alertas }) {
           className="alert-badge alert-badge-warning"
           title="Veces que el candidato salió de la pestaña/ventana durante la entrevista"
         >
-          ↩ {alertas.cambiosPantalla}
+          <TabSwitchIcon />
+          {alertas.cambiosPantalla}
         </span>
       )}
       {alertas.posibleUsoIA && (
         <span className="alert-badge alert-badge-danger" title={alertas.justificacionUsoIA}>
+          <AlertTriangleIcon />
           Posible uso de IA
         </span>
       )}

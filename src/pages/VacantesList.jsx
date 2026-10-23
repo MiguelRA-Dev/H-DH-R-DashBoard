@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import Select from "../components/Select";
 import DateRangeFilter from "../components/DateRangeFilter";
+import ErrorState from "../components/ErrorState";
 import { getVacantes, buildVacantesExportUrl } from "../lib/api";
 import { formatModalidad } from "../lib/vacanteLabels";
 
@@ -23,7 +24,9 @@ export default function VacantesList() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const navigate = useNavigate();
+  const retry = () => setReloadToken((t) => t + 1);
 
   useEffect(() => setPage(1), [q, estado, desde, hasta]);
 
@@ -34,7 +37,7 @@ export default function VacantesList() {
       .then(setResultado)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [q, estado, desde, hasta, page]);
+  }, [q, estado, desde, hasta, page, reloadToken]);
 
   const totalPaginas = Math.max(1, Math.ceil(resultado.total / PAGE_SIZE));
 
@@ -68,7 +71,7 @@ export default function VacantesList() {
         <DateRangeFilter desde={desde} hasta={hasta} onDesdeChange={setDesde} onHastaChange={setHasta} />
       </div>
 
-      {error && <div className="error-state">⚠️ {error}</div>}
+      {error && <ErrorState message={error} onRetry={retry} />}
       {loading && !error && <div className="loading-state">Cargando vacantes…</div>}
 
       {!loading && !error && resultado.items.length === 0 && (

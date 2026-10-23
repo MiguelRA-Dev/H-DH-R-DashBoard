@@ -1,35 +1,27 @@
-import { useEffect, useState } from "react";
-import { login, crearUsuario, getEstadoAuth } from "../lib/api";
+import { useState } from "react";
+import { login } from "../lib/api";
+import PasswordInput from "../components/PasswordInput";
+import ThemeToggle from "../components/ThemeToggle";
+import LoginOrb from "../components/LoginOrb";
+import { useTheme } from "../hooks/useTheme";
 
-// Antes de mostrar el formulario, pregunta si ya existe alguna cuenta. Si la
-// colección de usuarios está vacía (primera vez que se usa el dashboard),
-// deja crear la cuenta fundadora sin pedir sesión — después de esa, cualquier
-// cuenta nueva sale desde la página de Usuarios, ya logueado.
+// Ya no existe un "arranque sin sesión" para crear la primera cuenta: cada
+// organización nace con su primer admin ya creado (ver
+// scripts/crear-organizacion.js), así que esta pantalla siempre es login.
 export default function Login({ onAutenticado }) {
-  const [cargandoEstado, setCargandoEstado] = useState(true);
-  const [hayUsuarios, setHayUsuarios] = useState(true);
-  const [nombre, setNombre] = useState("");
+  const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [mostrarAyudaPassword, setMostrarAyudaPassword] = useState(false);
 
-  useEffect(() => {
-    getEstadoAuth()
-      .then((data) => setHayUsuarios(data.hayUsuarios))
-      .catch(() => setHayUsuarios(true))
-      .finally(() => setCargandoEstado(false));
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setEnviando(true);
     try {
-      const usuario = hayUsuarios
-        ? await login(email.trim(), password)
-        : await crearUsuario({ nombre, email: email.trim(), password });
+      const usuario = await login(email.trim(), password);
       onAutenticado(usuario);
     } catch (err) {
       setError(err.message);
@@ -38,60 +30,45 @@ export default function Login({ onAutenticado }) {
     }
   };
 
-  if (cargandoEstado) {
-    return <div className="loading-state">Cargando…</div>;
-  }
-
   return (
     <div className="login-screen">
-      <form className="vacante-form login-card" onSubmit={handleSubmit}>
-        <h2 className="login-title">{hayUsuarios ? "Iniciar sesión" : "Crea la primera cuenta"}</h2>
-        <p className="login-subtitle">Dashboard RRHH — H-AI-R</p>
+      <span className="login-blob login-blob-a" />
+      <span className="login-blob login-blob-b" />
+      <span className="login-blob login-blob-c" />
 
-        {!hayUsuarios && (
-          <p className="login-hint">
-            Todavía no hay ninguna cuenta creada en este dashboard — esta va a ser la primera.
-          </p>
-        )}
+      <div className="login-theme-toggle">
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
+      </div>
 
-        {error && <div className="setup-error">{error}</div>}
+      <div className="login-stage">
+        <span className="login-dot login-dot-1" />
+        <span className="login-dot login-dot-2" />
+        <span className="login-dot login-dot-3" />
 
-        {!hayUsuarios && (
-          <>
-            <label>Nombre</label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              autoFocus
-              required
-            />
-          </>
-        )}
+        <form className="login-glass-card" onSubmit={handleSubmit}>
+          <span className="login-card-brand">H-AI-R</span>
+          <h2 className="login-title">Iniciar sesión</h2>
+          <p className="login-subtitle">Entra con la cuenta de tu organización</p>
 
-        <label>Correo</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoFocus={hayUsuarios}
-          required
-        />
+          {error && <div className="setup-error">{error}</div>}
 
-        <label>Contraseña</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          minLength={8}
-          required
-        />
+          <label>Correo</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoFocus
+            required
+          />
 
-        <button type="submit" className="primary" disabled={enviando}>
-          {enviando ? "Ingresando…" : hayUsuarios ? "Ingresar" : "Crear cuenta y entrar"}
-        </button>
+          <label>Contraseña</label>
+          <PasswordInput
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
+            required
+          />
 
-        {hayUsuarios && (
           <div className="login-forgot">
             <button
               type="button"
@@ -100,16 +77,27 @@ export default function Login({ onAutenticado }) {
             >
               ¿Olvidaste tu contraseña?
             </button>
-            {mostrarAyudaPassword && (
-              <p className="login-hint">
-                Pídele a un administrador del equipo que te la restablezca desde la pestaña
-                "Usuarios" del dashboard — te va a compartir una contraseña temporal y te pedirá
-                cambiarla en tu próximo ingreso.
-              </p>
-            )}
           </div>
-        )}
-      </form>
+          {mostrarAyudaPassword && (
+            <p className="login-hint">
+              Pídele a un administrador del equipo que te la restablezca desde la pestaña
+              "Usuarios" del dashboard — te va a compartir una contraseña temporal y te pedirá
+              cambiarla en tu próximo ingreso.
+            </p>
+          )}
+
+          <button type="submit" className="primary" disabled={enviando}>
+            {enviando ? "Ingresando…" : "Ingresar"}
+          </button>
+
+          <p className="login-card-footer">Dashboard RRHH — H-AI-R</p>
+        </form>
+
+        <div className="login-hero">
+          <LoginOrb />
+          <p className="login-hero-caption">Tu entrevistador de IA, disponible 24/7</p>
+        </div>
+      </div>
     </div>
   );
 }

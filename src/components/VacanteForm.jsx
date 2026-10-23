@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Select from "./Select";
-import { MODALIDADES } from "../lib/vacanteLabels";
+import { MODALIDADES, IDIOMAS } from "../lib/vacanteLabels";
 
 const CAMPOS_VACIOS = {
   titulo: "",
@@ -10,6 +10,7 @@ const CAMPOS_VACIOS = {
   modalidad: "",
   tipoContrato: "",
   requisitos: "",
+  idioma: "es",
 };
 
 export default function VacanteForm({ initialValues, onSubmit, submitLabel }) {
@@ -83,6 +84,13 @@ export default function VacanteForm({ initialValues, onSubmit, submitLabel }) {
         onChange={setField("requisitos")}
         rows={4}
         placeholder="Un requisito por línea"
+      />
+
+      <label>Idioma de la entrevista</label>
+      <Select
+        value={values.idioma || "es"}
+        options={IDIOMAS}
+        onChange={(idioma) => setValues((v) => ({ ...v, idioma }))}
       />
 
       <button type="submit" className="primary" disabled={saving}>

@@ -3,6 +3,7 @@ import KpiCard from "../components/KpiCard";
 import FiltersBar from "../components/FiltersBar";
 import DateRangeFilter from "../components/DateRangeFilter";
 import InterviewsTable from "../components/InterviewsTable";
+import ErrorState from "../components/ErrorState";
 import { getStats, getEntrevistas, patchEntrevista, buildEntrevistasExportUrl } from "../lib/api";
 
 const PAGE_SIZE = 20;
@@ -18,12 +19,14 @@ export default function DashboardHome() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const retry = () => setReloadToken((t) => t + 1);
 
   useEffect(() => {
     getStats()
       .then(setStats)
       .catch((err) => setError(err.message));
-  }, []);
+  }, [reloadToken]);
 
   // Vuelve a página 1 cuando cambian los filtros (evita quedar en una página vacía).
   useEffect(() => setPage(1), [vacante, aprobado, q, desde, hasta]);
@@ -35,7 +38,7 @@ export default function DashboardHome() {
       .then(setResultado)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [vacante, aprobado, q, desde, hasta, page]);
+  }, [vacante, aprobado, q, desde, hasta, page, reloadToken]);
 
   const vacantes = useMemo(
     () => (stats?.porVacante || []).map((v) => v.vacante).filter(Boolean),
@@ -66,14 +69,14 @@ export default function DashboardHome() {
 
       {stats && (
         <div className="kpi-row">
-          <KpiCard label="Entrevistas totales" value={stats.total} />
+          <KpiCard label="Entrevistas totales" value={stats.total} accent />
           <KpiCard
             label="Tasa de aprobación"
             value={`${Math.round(stats.tasaAprobacion * 100)}%`}
             accent
           />
-          <KpiCard label="Puntaje promedio" value={stats.puntajePromedio.toFixed(1)} />
-          <KpiCard label="Vacantes activas" value={vacantes.length} />
+          <KpiCard label="Puntaje promedio" value={stats.puntajePromedio.toFixed(1)} accent />
+          <KpiCard label="Vacantes activas" value={vacantes.length} accent />
         </div>
       )}
 
@@ -99,7 +102,7 @@ export default function DashboardHome() {
         />
       </div>
 
-      {error && <div className="error-state">⚠️ {error}</div>}
+      {error && <ErrorState message={error} onRetry={retry} />}
       {loading && !error && <div className="loading-state">Cargando entrevistas…</div>}
       {!loading && !error && (
         <>

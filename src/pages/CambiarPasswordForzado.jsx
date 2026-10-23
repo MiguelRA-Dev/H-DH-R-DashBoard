@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { cambiarPassword } from "../lib/api";
+import PasswordInput from "../components/PasswordInput";
 
 // Pantalla bloqueante: aparece cuando un admin acaba de resetear la
 // contraseña de esta cuenta (ver Usuarios.jsx) y todavía está usando la
 // temporal. No deja pasar al resto del dashboard hasta que ponga una propia.
-export default function CambiarPasswordForzado({ onCambiada }) {
+export default function CambiarPasswordForzado({ onCambiada, onLogout }) {
   const [passwordActual, setPasswordActual] = useState("");
   const [passwordNueva, setPasswordNueva] = useState("");
   const [confirmar, setConfirmar] = useState("");
@@ -41,8 +42,7 @@ export default function CambiarPasswordForzado({ onCambiada }) {
         {error && <div className="setup-error">{error}</div>}
 
         <label>Contraseña temporal</label>
-        <input
-          type="password"
+        <PasswordInput
           value={passwordActual}
           onChange={(e) => setPasswordActual(e.target.value)}
           autoFocus
@@ -50,8 +50,7 @@ export default function CambiarPasswordForzado({ onCambiada }) {
         />
 
         <label>Nueva contraseña</label>
-        <input
-          type="password"
+        <PasswordInput
           value={passwordNueva}
           onChange={(e) => setPasswordNueva(e.target.value)}
           minLength={8}
@@ -59,8 +58,7 @@ export default function CambiarPasswordForzado({ onCambiada }) {
         />
 
         <label>Confirmar nueva contraseña</label>
-        <input
-          type="password"
+        <PasswordInput
           value={confirmar}
           onChange={(e) => setConfirmar(e.target.value)}
           minLength={8}
@@ -70,6 +68,14 @@ export default function CambiarPasswordForzado({ onCambiada }) {
         <button type="submit" className="primary" disabled={enviando}>
           {enviando ? "Guardando…" : "Cambiar contraseña y continuar"}
         </button>
+
+        {onLogout && (
+          <div className="login-forgot">
+            <button type="button" className="link-button" onClick={onLogout} disabled={enviando}>
+              Cerrar sesión
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

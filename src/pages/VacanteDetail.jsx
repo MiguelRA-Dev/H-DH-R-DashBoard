@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import VacanteForm from "../components/VacanteForm";
 import ScoreBadge from "../components/ScoreBadge";
+import ErrorState from "../components/ErrorState";
+import HistorialCambios from "../components/HistorialCambios";
 import { getVacante, updateVacante, deleteVacante, getEntrevistas } from "../lib/api";
-import { formatModalidad } from "../lib/vacanteLabels";
+import { formatModalidad, formatIdioma } from "../lib/vacanteLabels";
 
 const ESTADOS = ["abierta", "pausada", "cerrada"];
 
@@ -47,7 +49,7 @@ export default function VacanteDetail({ usuarioActual }) {
     navigate("/vacantes");
   };
 
-  if (error) return <div className="error-state">⚠️ {error}</div>;
+  if (error) return <ErrorState message={error} onRetry={cargar} />;
   if (!vacante) return <div className="loading-state">Cargando vacante…</div>;
 
   return (
@@ -74,6 +76,7 @@ export default function VacanteDetail({ usuarioActual }) {
               <p className="detail-candidate">
                 {vacante.departamento || "Sin departamento"} · {vacante.ubicacion || "Sin ubicación"}
                 {vacante.modalidad ? ` · ${formatModalidad(vacante.modalidad)}` : ""}
+                {` · Entrevista en ${formatIdioma(vacante.idioma)}`}
               </p>
             </div>
             <span className={`vacante-estado estado-${vacante.estado}`}>{vacante.estado}</span>
@@ -98,18 +101,18 @@ export default function VacanteDetail({ usuarioActual }) {
           {vacante.descripcion && (
             <div className="detail-card">
               <h3>Descripción</h3>
-              <p>{vacante.descripcion}</p>
+              <p className="pre-line">{vacante.descripcion}</p>
               {vacante.requisitos && (
                 <>
                   <h3>Requisitos</h3>
-                  <p style={{ whiteSpace: "pre-line" }}>{vacante.requisitos}</p>
+                  <p className="pre-line">{vacante.requisitos}</p>
                 </>
               )}
             </div>
           )}
 
-          <div className="page-header" style={{ marginTop: 28 }}>
-            <h3 style={{ margin: 0 }}>Candidatos entrevistados ({candidatos.length})</h3>
+          <div className="page-header page-header-spaced">
+            <h3 className="candidatos-heading">Candidatos entrevistados ({candidatos.length})</h3>
           </div>
 
           {candidatos.length === 0 ? (
@@ -134,6 +137,16 @@ export default function VacanteDetail({ usuarioActual }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {usuarioActual?.rol === "admin" && (
+            <div className="detail-card historial-card">
+              <h3>Historial de cambios</h3>
+              <p className="alert-hint">
+                Quién editó esta vacante y qué cambió, cuándo — solo visible para administradores.
+              </p>
+              <HistorialCambios historial={vacante.historial} />
             </div>
           )}
         </>

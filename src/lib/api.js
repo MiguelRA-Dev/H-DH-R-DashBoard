@@ -26,10 +26,6 @@ export function getMe() {
   return request("/api/auth/me");
 }
 
-export function getEstadoAuth() {
-  return request("/api/auth/estado");
-}
-
 export function getUsuarios() {
   return request("/api/usuarios");
 }
@@ -48,6 +44,10 @@ export function cambiarPassword(passwordActual, passwordNueva) {
 
 export function getStats() {
   return request("/api/stats");
+}
+
+export function actualizarOrganizacion(data) {
+  return request("/api/organizacion", json("PATCH", data));
 }
 
 export function getEntrevistas({ vacante, vacanteId, aprobado, q, desde, hasta, page, pageSize } = {}) {

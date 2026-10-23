@@ -9,6 +9,7 @@ import Pipeline from "./pages/Pipeline";
 import Usuarios from "./pages/Usuarios";
 import Login from "./pages/Login";
 import CambiarPasswordForzado from "./pages/CambiarPasswordForzado";
+import Superadmin from "./pages/Superadmin";
 import ThemeToggle from "./components/ThemeToggle";
 import { useTheme } from "./hooks/useTheme";
 import { getMe, logout } from "./lib/api";
@@ -18,13 +19,18 @@ export default function App() {
   // undefined = todavía no se sabe, null = no autenticado, objeto = sesión activa
   const [usuario, setUsuario] = useState(undefined);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  // /superadmin vive completamente fuera del flujo de sesión de una
+  // organización (otra cookie, ver api/_lib/auth.js) — se resuelve antes que
+  // nada, sin tocar getMe() ni el resto del estado de abajo.
+  const esSuperadmin = window.location.pathname.startsWith("/superadmin");
   const cerrarMenu = () => setMenuAbierto(false);
 
   useEffect(() => {
+    if (esSuperadmin) return;
     getMe()
       .then(setUsuario)
       .catch(() => setUsuario(null));
-  }, []);
+  }, [esSuperadmin]);
 
   const handleLogout = async () => {
     try {
@@ -33,6 +39,10 @@ export default function App() {
       setUsuario(null);
     }
   };
+
+  if (esSuperadmin) {
+    return <Superadmin />;
+  }
 
   if (usuario === undefined) {
     return <div className="loading-state">Cargando…</div>;
@@ -46,6 +56,7 @@ export default function App() {
     return (
       <CambiarPasswordForzado
         onCambiada={() => setUsuario((u) => ({ ...u, debeCambiarPassword: false }))}
+        onLogout={handleLogout}
       />
     );
   }
@@ -54,7 +65,12 @@ export default function App() {
     <>
       <header className="dash-topbar">
         <div className="dash-topbar-title">
-          <h1>Dashboard RRHH</h1>
+          <div className="dash-topbar-brand">
+            {usuario.organizacion?.logoUrl && (
+              <img className="dash-topbar-logo" src={usuario.organizacion.logoUrl} alt="" />
+            )}
+            <h1>{usuario.organizacion?.nombre || "Dashboard RRHH"}</h1>
+          </div>
           <p className="subtitle">Entrevistas y vacantes del agente de voz</p>
         </div>
 
@@ -119,7 +135,7 @@ export default function App() {
       <div className="dash-shell">
         <Routes>
           <Route path="/" element={<DashboardHome />} />
-          <Route path="/entrevistas/:id" element={<InterviewDetail />} />
+          <Route path="/entrevistas/:id" element={<InterviewDetail usuarioActual={usuario} />} />
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/vacantes" element={<VacantesList />} />
           <Route path="/vacantes/nueva" element={<VacanteNueva />} />

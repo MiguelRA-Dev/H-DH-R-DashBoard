@@ -10,3 +10,14 @@ const MODALIDAD_LABELS = Object.fromEntries(MODALIDADES.map((m) => [m.value, m.l
 export function formatModalidad(value) {
   return MODALIDAD_LABELS[value] || value || "—";
 }
+
+export const IDIOMAS = [
+  { value: "es", label: "Español" },
+  { value: "en", label: "Inglés" },
+];
+
+const IDIOMA_LABELS = Object.fromEntries(IDIOMAS.map((i) => [i.value, i.label]));
+
+export function formatIdioma(value) {
+  return IDIOMA_LABELS[value] || IDIOMA_LABELS.es;
+}

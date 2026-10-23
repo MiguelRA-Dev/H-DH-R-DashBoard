@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import Select from "../components/Select";
-import { getUsuarios, crearUsuario, resetearPasswordUsuario } from "../lib/api";
+import ErrorState from "../components/ErrorState";
+import PasswordInput from "../components/PasswordInput";
+import LicenciaBarra from "../components/LicenciaBarra";
+import { getUsuarios, crearUsuario, resetearPasswordUsuario, actualizarOrganizacion } from "../lib/api";
 
 const ROLES = [
   { value: "admin", label: "Admin" },
@@ -11,6 +14,18 @@ const ROL_LABEL = Object.fromEntries(ROLES.map((r) => [r.value, r.label]));
 
 const CAMPOS_VACIOS = { nombre: "", email: "", cargo: "", telefono: "", rol: "reclutador", password: "" };
 
+// Iniciales para el avatar: primera letra de las dos primeras palabras del
+// nombre (ej. "Miguel Angel Riaño" → "MA"), nunca más de dos para que quepan
+// en el círculo sin encoger la fuente.
+function iniciales(nombre) {
+  return (nombre || "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() || "")
+    .join("");
+}
+
 export default function Usuarios({ usuarioActual }) {
   const [usuarios, setUsuarios] = useState(null);
   const [error, setError] = useState(null);
@@ -19,9 +34,24 @@ export default function Usuarios({ usuarioActual }) {
   const [formError, setFormError] = useState(null);
   const [reseteando, setReseteando] = useState(null);
   const [passwordGenerada, setPasswordGenerada] = useState(null);
+  const [marca, setMarca] = useState({
+    nombre: usuarioActual?.organizacion?.nombre || "",
+    logoUrl: usuarioActual?.organizacion?.logoUrl || "",
+  });
+  const [guardandoMarca, setGuardandoMarca] = useState(false);
+  const [marcaError, setMarcaError] = useState(null);
+  const [marcaGuardada, setMarcaGuardada] = useState(false);
 
   const esAdmin = usuarioActual?.rol === "admin";
   const miId = usuarioActual?.id || usuarioActual?._id;
+
+  // Uso real de licencias de la propia organización (estilo Azure AD: cuántos
+  // puestos contratados vs. cuántos ya están en uso) — se calcula del mismo
+  // listado de usuarios que ya se trae para la lista de abajo, sin otra
+  // llamada aparte. El cupo viene de /api/auth/me (ver organizacion.licencias).
+  const licencias = usuarioActual?.organizacion?.licencias || { admin: 0, reclutador: 0 };
+  const usoAdmin = usuarios?.filter((u) => u.rol === "admin").length || 0;
+  const usoReclutador = usuarios?.filter((u) => (u.rol || "reclutador") === "reclutador").length || 0;
 
   const cargar = () => {
     getUsuarios()
@@ -68,13 +98,32 @@ export default function Usuarios({ usuarioActual }) {
     }
   };
 
+  const handleGuardarMarca = async (e) => {
+    e.preventDefault();
+    setMarcaError(null);
+    setMarcaGuardada(false);
+    setGuardandoMarca(true);
+    try {
+      await actualizarOrganizacion({ nombre: marca.nombre, logoUrl: marca.logoUrl });
+      setMarcaGuardada(true);
+      // El nombre/logo vive en el estado de App.jsx (viene de /api/auth/me),
+      // no acá — recargar es lo más simple para que el encabezado y todo lo
+      // demás lo reflejen de una, sin duplicar ese estado en dos lugares.
+      window.location.reload();
+    } catch (err) {
+      setMarcaError(err.message);
+    } finally {
+      setGuardandoMarca(false);
+    }
+  };
+
   return (
     <>
       <div className="page-header">
         <h2>Usuarios</h2>
       </div>
 
-      {error && <div className="error-state">⚠️ {error}</div>}
+      {error && <ErrorState message={error} onRetry={cargar} />}
 
       {passwordGenerada && (
         <div className="temp-password-banner">
@@ -105,48 +154,91 @@ export default function Usuarios({ usuarioActual }) {
 
       {usuarios && (
         <div className="usuarios-grid">
-          <div className="usuarios-table-scroll">
-            <table className="interviews-table usuarios-table">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Correo</th>
-                  <th>Cargo</th>
-                  <th>Teléfono</th>
-                  <th>Rol</th>
-                  {esAdmin && <th></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {usuarios.map((u) => (
-                  <tr key={u._id}>
-                    <td>{u.nombre}</td>
-                    <td className="cell-muted">{u.email}</td>
-                    <td className="cell-muted">{u.cargo || "—"}</td>
-                    <td className="cell-muted">{u.telefono || "—"}</td>
-                    <td>
+          <div className="usuarios-left">
+            <div className="detail-card">
+              <h3>Licencias</h3>
+              <p className="alert-hint">
+                Puestos contratados para tu organización — habla con quien administra la cuenta si
+                necesitas ampliar el cupo.
+              </p>
+              <div className="org-card-licencias">
+                <LicenciaBarra label="Admin" uso={usoAdmin} cupo={licencias.admin} />
+                <LicenciaBarra label="Reclutador" uso={usoReclutador} cupo={licencias.reclutador} />
+              </div>
+            </div>
+
+            {esAdmin && (
+              <form className="detail-card marca-card" onSubmit={handleGuardarMarca}>
+                <h3>Marca de tu organización</h3>
+                <p className="alert-hint">
+                  Así se ve tu empresa en el dashboard y para los candidatos en el agente de voz —
+                  el nombre y el logo, nada más. El resto del diseño se mantiene igual para todos.
+                </p>
+                {marcaError && <div className="setup-error">{marcaError}</div>}
+
+                <div className="form-row">
+                  <div>
+                    <label>Nombre para mostrar</label>
+                    <input
+                      type="text"
+                      value={marca.nombre}
+                      onChange={(e) => setMarca((m) => ({ ...m, nombre: e.target.value }))}
+                      placeholder="Ej: Teleperformance"
+                      maxLength={60}
+                    />
+                  </div>
+                  <div>
+                    <label>URL del logo (opcional)</label>
+                    <input
+                      type="url"
+                      value={marca.logoUrl}
+                      onChange={(e) => setMarca((m) => ({ ...m, logoUrl: e.target.value }))}
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+
+                <div className="notes-editor-actions">
+                  <button type="submit" className="primary compact" disabled={guardandoMarca}>
+                    {guardandoMarca ? "Guardando…" : "Guardar marca"}
+                  </button>
+                  {marcaGuardada && <span className="notes-saved">Guardado</span>}
+                </div>
+              </form>
+            )}
+
+            <div className="usuarios-list">
+              {usuarios.map((u) => (
+                <div className="usuario-card" key={u._id}>
+                  <span className="usuario-avatar" aria-hidden="true">
+                    {iniciales(u.nombre)}
+                  </span>
+
+                  <div className="usuario-info">
+                    <p className="usuario-name">{u.nombre}</p>
+                    <p className="usuario-email">{u.email}</p>
+                    <div className="usuario-meta">
+                      {u.cargo && <span>{u.cargo}</span>}
+                      {u.telefono && <span>{u.telefono}</span>}
                       <span className={`rol-badge rol-badge-${u.rol || "admin"}`}>
                         {ROL_LABEL[u.rol] || "Admin"}
                       </span>
-                    </td>
-                    {esAdmin && (
-                      <td>
-                        {u._id !== miId && (
-                          <button
-                            type="button"
-                            className="link-button"
-                            disabled={reseteando === u._id}
-                            onClick={() => handleReset(u)}
-                          >
-                            {reseteando === u._id ? "Restableciendo…" : "Restablecer contraseña"}
-                          </button>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+
+                  {esAdmin && u._id !== miId && (
+                    <button
+                      type="button"
+                      className="link-button usuario-action"
+                      disabled={reseteando === u._id}
+                      onClick={() => handleReset(u)}
+                    >
+                      {reseteando === u._id ? "Restableciendo…" : "Restablecer contraseña"}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {esAdmin ? (
@@ -184,8 +276,7 @@ export default function Usuarios({ usuarioActual }) {
               />
 
               <label>Contraseña</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={values.password}
                 onChange={setField("password")}
                 minLength={8}
