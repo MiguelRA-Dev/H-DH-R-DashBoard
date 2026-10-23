@@ -1328,6 +1328,10 @@ button.danger-outline:hover {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* Sin esto, un grid item mide como mínimo el ancho de su contenido más
+     ancho (acá, la fila del panel de reseteo) y empuja la columna de al
+     lado fuera de pantalla en vez de dejar que el input se achique. */
+  min-width: 0;
 }
 
 @media (max-width: 800px) {
@@ -1359,6 +1363,7 @@ button.danger-outline:hover {
   border-radius: 14px;
   box-shadow: var(--card-shadow);
   overflow: hidden;
+  min-width: 0;
 }
 
 .usuario-card-row {
@@ -2167,17 +2172,20 @@ button.danger-outline:hover {
 
 .reset-password-panel-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
 }
 
 .reset-password-panel-row .password-input {
-  flex: 1;
+  flex: 1 1 160px;
+  min-width: 0;
   margin-bottom: 0;
 }
 
 .reset-password-panel-row .password-input input {
   width: 100%;
+  min-width: 0;
   height: 40px;
   background: var(--surface);
   border: 1px solid var(--border);
