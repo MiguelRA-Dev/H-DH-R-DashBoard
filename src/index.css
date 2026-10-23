@@ -22,7 +22,7 @@
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.35);
   --button-primary-bg: var(--accent);
   --button-primary-text: #062b26;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-display: "Inter", sans-serif;
   --font-body: "Inter", sans-serif;
   color-scheme: dark;
 }
@@ -55,6 +55,14 @@
 
 * {
   box-sizing: border-box;
+}
+
+/* Los controles de formulario no heredan la tipografía del body por
+   defecto en ningún navegador — sin esto, cualquier input/button/select
+   al que se le olvide poner font-family explícito cae en la fuente del
+   sistema operativo en vez de Inter, y se nota. */
+button, input, select, textarea {
+  font-family: inherit;
 }
 
 /* ---------- Scrollbars ---------- */
@@ -186,12 +194,15 @@ a {
 /* ---------- Topbar ---------- */
 
 .dash-topbar {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 22px 32px;
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 
@@ -1465,12 +1476,20 @@ button.danger-outline:hover {
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface-2);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.18);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+}
+.toggle:not(:disabled):hover {
+  border-color: var(--text-dim);
 }
 .toggle.on {
   background: var(--accent);
   border-color: var(--accent);
+  box-shadow: none;
+}
+.toggle.on:not(:disabled):hover {
+  filter: brightness(1.08);
 }
 .toggle:disabled {
   opacity: 0.45;
@@ -1500,7 +1519,11 @@ button.danger-outline:hover {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }
 
 .toggle-field-title {
@@ -1543,16 +1566,56 @@ button.danger-outline:hover {
 .usuarios-form {
   margin: 0;
   /* Acompaña a la tabla mientras se hace scroll, en vez de quedar huérfano
-     arriba con un hueco vacío debajo cuando la lista de usuarios es larga. */
+     arriba con un hueco vacío debajo cuando la lista de usuarios es larga.
+     96px para quedar debajo del .dash-topbar, que ahora también es sticky. */
   position: sticky;
-  top: 20px;
+  top: 96px;
 }
 
-.usuarios-form-title {
-  font-family: var(--font-display);
-  font-size: 15px;
+.usuarios-form-eyebrow {
+  font-size: 11px;
   font-weight: 700;
-  margin: 0 0 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+}
+
+/* La vista previa de la tarjeta usa literalmente .usuario-avatar/.usuario-info
+   /.usuario-meta — mismas clases que una fila real de la lista — para que se
+   sienta como la misma tarjeta tomando forma, no como un formulario aparte.
+   El borde punteado y el tinte son lo único que la distingue de una real. */
+.usuarios-form-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  margin-bottom: 22px;
+  background: var(--accent-bg-soft);
+  border: 1px dashed var(--accent-border);
+  border-radius: 14px;
+}
+
+.usuarios-form-preview-placeholder {
+  color: var(--text-dim);
+  font-weight: 400;
+  font-style: italic;
+}
+
+.usuarios-form-section {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 14px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.usuarios-form-section:first-of-type {
+  padding-top: 0;
+  border-top: none;
 }
 
 .rol-badge {
@@ -1731,6 +1794,14 @@ button.danger-outline:hover {
 .vacante-form button.primary {
   width: auto;
   padding: 11px 22px;
+}
+
+/* El de "Crear cuenta" cierra un formulario largo — ancho completo le da
+   más peso como punto final, en vez de quedar como un botón chico suelto
+   a la izquierda después de seis campos. */
+.usuarios-form button.primary:not(.compact) {
+  width: 100%;
+  margin-top: 4px;
 }
 
 /* ---------- Vacante estado / acciones ---------- */

@@ -323,8 +323,33 @@ export default function Usuarios({ usuarioActual }) {
 
           {esAdmin ? (
             <form className="vacante-form usuarios-form" onSubmit={handleSubmit}>
-              <h3 className="usuarios-form-title">Agregar persona al equipo</h3>
+              <p className="usuarios-form-eyebrow">Nueva persona · así se va a ver su tarjeta</p>
+              <div className="usuarios-form-preview">
+                <span className="usuario-avatar" aria-hidden="true">
+                  {values.nombre.trim() ? iniciales(values.nombre) : "＋"}
+                </span>
+                <div className="usuario-info">
+                  <p className="usuario-name">
+                    {values.nombre.trim() || <span className="usuarios-form-preview-placeholder">Nombre y apellido</span>}
+                  </p>
+                  <p className="usuario-email">
+                    {values.email.trim() || <span className="usuarios-form-preview-placeholder">correo@empresa.com</span>}
+                  </p>
+                  <div className="usuario-meta">
+                    {values.cargo && <span>{values.cargo}</span>}
+                    {values.telefono && <span>{values.telefono}</span>}
+                    <span className={`rol-badge rol-badge-${values.rol}`}>{ROL_LABEL[values.rol]}</span>
+                    <span className={`licencia-estado ${asignarLicenciaEfectivo ? "con-licencia" : "sin-licencia"}`}>
+                      <span className="licencia-dot" />
+                      {asignarLicenciaEfectivo ? "Con licencia" : "Sin licencia"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {formError && <div className="setup-error">{formError}</div>}
+
+              <p className="usuarios-form-section">Datos de contacto</p>
 
               <label>Nombre</label>
               <input type="text" value={values.nombre} onChange={setField("nombre")} required />
@@ -347,6 +372,8 @@ export default function Usuarios({ usuarioActual }) {
                   <input type="tel" value={values.telefono} onChange={setField("telefono")} />
                 </div>
               </div>
+
+              <p className="usuarios-form-section">Acceso</p>
 
               <label>Rol</label>
               <Select
@@ -380,7 +407,7 @@ export default function Usuarios({ usuarioActual }) {
                 </div>
               </div>
 
-              <button type="submit" className="primary compact" disabled={creando}>
+              <button type="submit" className="primary" disabled={creando}>
                 {creando ? "Creando…" : "Crear cuenta"}
               </button>
             </form>
