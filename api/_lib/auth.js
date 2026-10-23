@@ -3,6 +3,14 @@ import { randomBytes, scryptSync, timingSafeEqual, createHmac } from "node:crypt
 const COOKIE_NAME = "sesion";
 const SESION_DURACION_SEGUNDOS = 60 * 60 * 24 * 7; // 7 días
 
+// Sesión de superadmin: completamente aparte de la de un usuario normal (otra
+// cookie, no lleva organizacionId) porque abre TODAS las organizaciones, no
+// una sola — nunca debe poder confundirse con una sesión de tenant. Duración
+// corta a propósito, es una herramienta operativa, no algo que se deja
+// abierto en una pestaña días enteros.
+const COOKIE_SUPERADMIN = "sesion_superadmin";
+const SUPERADMIN_DURACION_SEGUNDOS = 60 * 60 * 12; // 12 horas
+
 export const ROLES_VALIDOS = ["admin", "reclutador"];
 
 // Sin letras/números ambiguos (0/O, 1/l/I) para que se puedan dictar o
@@ -57,6 +65,9 @@ export function crearTokenSesion(usuario) {
     // Cuentas creadas antes de que existiera este campo se tratan como admin,
     // para no dejar afuera a nadie que ya tenía acceso total.
     rol: usuario.rol || "admin",
+    // A qué organización pertenece — todas las consultas de la API filtran por
+    // esto, es lo que separa los datos de un cliente de los de otro.
+    organizacionId: usuario.organizacionId?.toString(),
     debeCambiarPassword: Boolean(usuario.debeCambiarPassword),
     exp: Date.now() + SESION_DURACION_SEGUNDOS * 1000,
   });
@@ -65,7 +76,10 @@ export function crearTokenSesion(usuario) {
   return `${payloadB64}.${firma}`;
 }
 
-function verificarTokenSesion(token) {
+// Verifica firma + expiración de cualquier token con esta forma (payload en
+// base64url + firma HMAC) — lo usan tanto la sesión normal como la de
+// superadmin, cada una interpretando el payload a su manera.
+function verificarTokenFirmado(token) {
   if (!token) return null;
   const [payloadB64, firma] = token.split(".");
   if (!payloadB64 || !firma) return null;
@@ -129,9 +143,18 @@ export function borrarCookieSesion(response) {
 // handler que llama solo tiene que hacer `if (!usuario) return;`.
 export function requireAuth(request, response) {
   const token = leerCookie(request, COOKIE_NAME);
-  const payload = verificarTokenSesion(token);
+  const payload = verificarTokenFirmado(token);
   if (!payload) {
     response.status(401).json({ error: "No autenticado." });
+    return null;
+  }
+  // Token de una sesión anterior a que existiera organizacionId: nunca lo
+  // dejamos pasar como si fuera válido. `new ObjectId(undefined)` no revienta
+  // — genera un id nuevo y aleatorio cada vez, así que un organizacionId
+  // ausente terminaría creando/buscando datos bajo una organización fantasma
+  // distinta en cada petición, en silencio. Mejor forzar un login nuevo.
+  if (!payload.organizacionId) {
+    response.status(401).json({ error: "Tu sesión es antigua, vuelve a iniciar sesión." });
     return null;
   }
   return {
@@ -139,6 +162,7 @@ export function requireAuth(request, response) {
     nombre: payload.nombre,
     email: payload.email,
     rol: payload.rol || "admin",
+    organizacionId: payload.organizacionId,
     debeCambiarPassword: Boolean(payload.debeCambiarPassword),
   };
 }
@@ -154,4 +178,60 @@ export function requireAdmin(request, response) {
     return null;
   }
   return usuario;
+}
+
+// ---------- Superadmin (fuera de cualquier organización) ----------
+
+// Sin usuario/contraseña por correo: es una sola contraseña compartida en una
+// variable de entorno (SUPERADMIN_PASSWORD), igual de simple que los scripts
+// de CLI que reemplaza (crear-organizacion.js, reset-admin-password.js) —
+// no hay un equipo de superadmins, es quien opera la plataforma.
+export function verificarPasswordSuperadmin(password) {
+  const esperado = process.env.SUPERADMIN_PASSWORD;
+  if (!esperado || !password) return false;
+  const a = Buffer.from(password);
+  const b = Buffer.from(esperado);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
+export function crearTokenSuperadmin() {
+  const payload = JSON.stringify({
+    superadmin: true,
+    exp: Date.now() + SUPERADMIN_DURACION_SEGUNDOS * 1000,
+  });
+  const payloadB64 = Buffer.from(payload).toString("base64url");
+  const firma = createHmac("sha256", secreto()).update(payloadB64).digest("base64url");
+  return `${payloadB64}.${firma}`;
+}
+
+export function escribirCookieSuperadmin(response, token) {
+  const atributos = [
+    `${COOKIE_SUPERADMIN}=${token}`,
+    "HttpOnly",
+    "SameSite=Lax",
+    "Path=/",
+    `Max-Age=${SUPERADMIN_DURACION_SEGUNDOS}`,
+  ];
+  if (ES_PRODUCCION) atributos.push("Secure");
+  response.setHeader("Set-Cookie", atributos.join("; "));
+}
+
+export function borrarCookieSuperadmin(response) {
+  const atributos = [`${COOKIE_SUPERADMIN}=`, "HttpOnly", "SameSite=Lax", "Path=/", "Max-Age=0"];
+  if (ES_PRODUCCION) atributos.push("Secure");
+  response.setHeader("Set-Cookie", atributos.join("; "));
+}
+
+// Exige sesión de superadmin válida. Deliberadamente SIN relación con
+// requireAuth/requireAdmin: una sesión de tenant nunca debe servir acá, ni
+// viceversa — son dos cookies y dos payloads distintos.
+export function requireSuperAdmin(request, response) {
+  const token = leerCookie(request, COOKIE_SUPERADMIN);
+  const payload = verificarTokenFirmado(token);
+  if (!payload || payload.superadmin !== true) {
+    response.status(401).json({ error: "No autenticado como superadmin." });
+    return null;
+  }
+  return true;
 }

@@ -30,7 +30,10 @@ export default async function handler(request, response) {
     const passwordTemporal = generarPasswordTemporal();
 
     const usuario = await coleccion.findOneAndUpdate(
-      { _id: new ObjectId(id) },
+      // organizacionId también en el filtro: sin esto, un admin podría
+      // resetear la contraseña de alguien de OTRA empresa con solo adivinar
+      // su id.
+      { _id: new ObjectId(id), organizacionId: new ObjectId(admin.organizacionId) },
       { $set: { passwordHash: hashPassword(passwordTemporal), debeCambiarPassword: true } },
       { returnDocument: "after", projection: { passwordHash: 0 } }
     );

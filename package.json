@@ -10,7 +10,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "reset-admin-password": "node scripts/reset-admin-password.js",
+    "crear-organizacion": "node scripts/crear-organizacion.js"
   },
   "dependencies": {
     "mongodb": "^7.5.0",

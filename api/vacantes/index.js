@@ -1,24 +1,28 @@
+import { ObjectId } from "mongodb";
 import { getVacantesCollection } from "../_lib/mongodb.js";
 import { buildVacantesFilter } from "../_lib/filters.js";
 import { requireAuth } from "../_lib/auth.js";
 
 const ESTADOS_VALIDOS = ["abierta", "pausada", "cerrada"];
+const IDIOMAS_VALIDOS = ["es", "en"];
 
 export default async function handler(request, response) {
-  if (!requireAuth(request, response)) return;
+  const usuario = requireAuth(request, response);
+  if (!usuario) return;
 
   const coleccion = await getVacantesCollection();
+  const organizacionId = new ObjectId(usuario.organizacionId);
 
   if (request.method === "GET") {
     try {
-      const filtro = buildVacantesFilter(request.query);
+      const filtro = { ...buildVacantesFilter(request.query), organizacionId };
 
       const page = Math.max(1, parseInt(request.query.page, 10) || 1);
       const pageSize = Math.min(100, Math.max(1, parseInt(request.query.pageSize, 10) || 20));
 
       const [items, total] = await Promise.all([
         coleccion
-          .find(filtro)
+          .find(filtro, { projection: { historial: 0 } })
           .sort({ creadoEn: -1 })
           .skip((page - 1) * pageSize)
           .limit(pageSize)
@@ -42,6 +46,7 @@ export default async function handler(request, response) {
 
     const ahora = new Date();
     const vacante = {
+      organizacionId,
       titulo,
       descripcion: body.descripcion || "",
       departamento: body.departamento || "",
@@ -49,6 +54,7 @@ export default async function handler(request, response) {
       modalidad: body.modalidad || "",
       tipoContrato: body.tipoContrato || "",
       requisitos: body.requisitos || "",
+      idioma: IDIOMAS_VALIDOS.includes(body.idioma) ? body.idioma : "es",
       estado: ESTADOS_VALIDOS.includes(body.estado) ? body.estado : "abierta",
       creadoEn: ahora,
       actualizadoEn: ahora,

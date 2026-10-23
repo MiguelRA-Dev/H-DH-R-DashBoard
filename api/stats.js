@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import { getEntrevistasCollection } from "./_lib/mongodb.js";
 import { requireAuth } from "./_lib/auth.js";
 
@@ -5,13 +6,16 @@ export default async function handler(request, response) {
   if (request.method !== "GET") {
     return response.status(405).json({ error: "Método no permitido" });
   }
-  if (!requireAuth(request, response)) return;
+  const usuario = requireAuth(request, response);
+  if (!usuario) return;
 
   try {
     const coleccion = await getEntrevistasCollection();
+    const organizacionId = new ObjectId(usuario.organizacionId);
 
     const [resumen] = await coleccion
       .aggregate([
+        { $match: { organizacionId } },
         {
           $group: {
             _id: null,
@@ -25,6 +29,7 @@ export default async function handler(request, response) {
 
     const porVacante = await coleccion
       .aggregate([
+        { $match: { organizacionId } },
         {
           $group: {
             _id: "$vacante",

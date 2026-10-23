@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import { getEntrevistasCollection } from "../_lib/mongodb.js";
 import { buildEntrevistasFilter } from "../_lib/filters.js";
 import { toCsv } from "../_lib/csv.js";
@@ -20,14 +21,18 @@ export default async function handler(request, response) {
   if (request.method !== "GET") {
     return response.status(405).json({ error: "Método no permitido" });
   }
-  if (!requireAuth(request, response)) return;
+  const usuario = requireAuth(request, response);
+  if (!usuario) return;
 
   try {
     const coleccion = await getEntrevistasCollection();
-    const filtro = buildEntrevistasFilter(request.query);
+    const filtro = {
+      ...buildEntrevistasFilter(request.query),
+      organizacionId: new ObjectId(usuario.organizacionId),
+    };
 
     const entrevistas = await coleccion
-      .find(filtro, { projection: { transcripcion: 0 } })
+      .find(filtro, { projection: { transcripcion: 0, historial: 0 } })
       .sort({ creadoEn: -1 })
       .limit(5000)
       .toArray();

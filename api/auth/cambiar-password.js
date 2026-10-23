@@ -1,6 +1,12 @@
 import { ObjectId } from "mongodb";
 import { getUsuariosCollection } from "../_lib/mongodb.js";
-import { requireAuth, verificarPassword, hashPassword } from "../_lib/auth.js";
+import {
+  requireAuth,
+  verificarPassword,
+  hashPassword,
+  crearTokenSesion,
+  escribirCookieSesion,
+} from "../_lib/auth.js";
 
 // Cualquier usuario autenticado cambia su propia contraseña acá — tanto para
 // el caso forzado (después de un reseteo por un admin, ver api/usuarios/[id].js)
@@ -32,6 +38,14 @@ export default async function handler(request, response) {
       { _id: doc._id },
       { $set: { passwordHash: hashPassword(passwordNueva) }, $unset: { debeCambiarPassword: "" } }
     );
+
+    // El token de sesión lleva debeCambiarPassword firmado adentro (ver
+    // crearTokenSesion): si no se reemite acá, la cookie vieja lo sigue
+    // diciendo "true" aunque la contraseña ya haya cambiado, y la próxima
+    // vez que se abra el dashboard vuelve a mandar a esta misma pantalla.
+    const token = crearTokenSesion({ ...doc, debeCambiarPassword: false });
+    escribirCookieSesion(response, token);
+
     response.status(200).json({ ok: true });
   } catch (error) {
     console.error(error);

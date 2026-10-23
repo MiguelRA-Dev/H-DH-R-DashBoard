@@ -38,3 +38,8 @@ export async function getUsuariosCollection() {
   const client = await clientPromise;
   return client.db("agente_voz").collection("usuarios");
 }
+
+export async function getOrganizacionesCollection() {
+  const client = await clientPromise;
+  return client.db("agente_voz").collection("organizaciones");
+}

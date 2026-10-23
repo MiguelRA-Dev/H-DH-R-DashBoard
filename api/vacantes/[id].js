@@ -3,6 +3,7 @@ import { getVacantesCollection } from "../_lib/mongodb.js";
 import { requireAuth, requireAdmin } from "../_lib/auth.js";
 
 const ESTADOS_VALIDOS = ["abierta", "pausada", "cerrada"];
+const IDIOMAS_VALIDOS = ["es", "en"];
 const CAMPOS_EDITABLES = [
   "titulo",
   "descripcion",
@@ -11,11 +12,16 @@ const CAMPOS_EDITABLES = [
   "modalidad",
   "tipoContrato",
   "requisitos",
+  "idioma",
   "estado",
 ];
+// Campos de texto largo: el historial registra que cambiaron, no el texto
+// completo antes/después (crecería el documento sin límite con cada edición).
+const CAMPOS_SIN_VALOR_EN_HISTORIAL = ["descripcion", "requisitos"];
 
 export default async function handler(request, response) {
-  if (!requireAuth(request, response)) return;
+  const usuario = requireAuth(request, response);
+  if (!usuario) return;
 
   const { id } = request.query;
   if (!ObjectId.isValid(id)) {
@@ -23,11 +29,12 @@ export default async function handler(request, response) {
   }
 
   const coleccion = await getVacantesCollection();
+  const organizacionId = new ObjectId(usuario.organizacionId);
   const _id = new ObjectId(id);
 
   if (request.method === "GET") {
     try {
-      const vacante = await coleccion.findOne({ _id });
+      const vacante = await coleccion.findOne({ _id, organizacionId });
       if (!vacante) return response.status(404).json({ error: "No encontrada" });
       return response.status(200).json(vacante);
     } catch (error) {
@@ -44,18 +51,40 @@ export default async function handler(request, response) {
     if (body.estado !== undefined && !ESTADOS_VALIDOS.includes(body.estado)) {
       return response.status(400).json({ error: "Estado inválido." });
     }
-
-    const cambios = { actualizadoEn: new Date() };
-    for (const campo of CAMPOS_EDITABLES) {
-      if (body[campo] !== undefined) cambios[campo] = body[campo];
+    if (body.idioma !== undefined && !IDIOMAS_VALIDOS.includes(body.idioma)) {
+      return response.status(400).json({ error: "Idioma inválido." });
     }
 
     try {
-      const resultado = await coleccion.findOneAndUpdate(
-        { _id },
-        { $set: cambios },
-        { returnDocument: "after" }
-      );
+      const actual = await coleccion.findOne({ _id, organizacionId });
+      if (!actual) return response.status(404).json({ error: "No encontrada" });
+
+      const cambios = { actualizadoEn: new Date() };
+      const historial = [];
+
+      for (const campo of CAMPOS_EDITABLES) {
+        if (body[campo] === undefined) continue;
+        const valorAnterior = actual[campo] ?? "";
+        const valorNuevo = body[campo] ?? "";
+        if (valorAnterior !== valorNuevo) {
+          historial.push({
+            campo,
+            valorAnterior: CAMPOS_SIN_VALOR_EN_HISTORIAL.includes(campo) ? null : valorAnterior,
+            valorNuevo: CAMPOS_SIN_VALOR_EN_HISTORIAL.includes(campo) ? null : valorNuevo,
+            usuarioId: usuario.id,
+            usuarioNombre: usuario.nombre,
+            fecha: new Date(),
+          });
+        }
+        cambios[campo] = body[campo];
+      }
+
+      const updateDoc = { $set: cambios };
+      if (historial.length > 0) updateDoc.$push = { historial: { $each: historial } };
+
+      const resultado = await coleccion.findOneAndUpdate({ _id, organizacionId }, updateDoc, {
+        returnDocument: "after",
+      });
       if (!resultado) return response.status(404).json({ error: "No encontrada" });
       return response.status(200).json(resultado);
     } catch (error) {
@@ -69,7 +98,7 @@ export default async function handler(request, response) {
     // reservada a admin, igual que gestionar el equipo (ver api/usuarios).
     if (!requireAdmin(request, response)) return;
     try {
-      const resultado = await coleccion.deleteOne({ _id });
+      const resultado = await coleccion.deleteOne({ _id, organizacionId });
       if (resultado.deletedCount === 0) {
         return response.status(404).json({ error: "No encontrada" });
       }

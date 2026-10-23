@@ -8,10 +8,10 @@ import path from "node:path";
 // confundirlas — mismo orden de precedencia que usa Vercel entre ambas.
 const routes = [
   { pattern: /^\/api\/stats\/?$/, file: "api/stats.js", params: [] },
+  { pattern: /^\/api\/organizacion\/?$/, file: "api/organizacion.js", params: [] },
   { pattern: /^\/api\/auth\/login\/?$/, file: "api/auth/login.js", params: [] },
   { pattern: /^\/api\/auth\/logout\/?$/, file: "api/auth/logout.js", params: [] },
   { pattern: /^\/api\/auth\/me\/?$/, file: "api/auth/me.js", params: [] },
-  { pattern: /^\/api\/auth\/estado\/?$/, file: "api/auth/estado.js", params: [] },
   { pattern: /^\/api\/auth\/cambiar-password\/?$/, file: "api/auth/cambiar-password.js", params: [] },
   { pattern: /^\/api\/usuarios\/?$/, file: "api/usuarios/index.js", params: [] },
   { pattern: /^\/api\/usuarios\/([^/]+)\/?$/, file: "api/usuarios/[id].js", params: ["id"] },
@@ -21,6 +21,19 @@ const routes = [
   { pattern: /^\/api\/vacantes\/export\/?$/, file: "api/vacantes/export.js", params: [] },
   { pattern: /^\/api\/vacantes\/?$/, file: "api/vacantes/index.js", params: [] },
   { pattern: /^\/api\/vacantes\/([^/]+)\/?$/, file: "api/vacantes/[id].js", params: ["id"] },
+  { pattern: /^\/api\/superadmin\/login\/?$/, file: "api/superadmin/login.js", params: [] },
+  { pattern: /^\/api\/superadmin\/logout\/?$/, file: "api/superadmin/logout.js", params: [] },
+  { pattern: /^\/api\/superadmin\/me\/?$/, file: "api/superadmin/me.js", params: [] },
+  {
+    pattern: /^\/api\/superadmin\/organizaciones\/?$/,
+    file: "api/superadmin/organizaciones/index.js",
+    params: [],
+  },
+  {
+    pattern: /^\/api\/superadmin\/organizaciones\/([^/]+)\/?$/,
+    file: "api/superadmin/organizaciones/[id].js",
+    params: ["id"],
+  },
 ];
 
 function withResponseHelpers(res) {
