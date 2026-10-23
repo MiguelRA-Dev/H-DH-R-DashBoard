@@ -1,10 +1,11 @@
 import { getOrganizacionesCollection, getUsuariosCollection } from "../../_lib/mongodb.js";
 import { requireSuperAdmin, hashPassword, generarPasswordTemporal } from "../../_lib/auth.js";
+import { conCors } from "../../_lib/cors.js";
 
 // Mismo flujo que scripts/crear-organizacion.js, pero como endpoint — ya no
 // hace falta tener acceso a la terminal/Mongo para aprovisionar un cliente
 // nuevo ni para ver cuántas licencias tiene usadas cada uno.
-export default async function handler(request, response) {
+async function handler(request, response) {
   if (!requireSuperAdmin(request, response)) return;
 
   if (request.method === "GET") {
@@ -127,3 +128,5 @@ export default async function handler(request, response) {
 
   return response.status(405).json({ error: "Método no permitido" });
 }
+
+export default conCors(handler);

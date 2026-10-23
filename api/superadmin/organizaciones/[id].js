@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { getOrganizacionesCollection, getUsuariosCollection } from "../../_lib/mongodb.js";
 import { requireSuperAdmin } from "../../_lib/auth.js";
+import { conCors } from "../../_lib/cors.js";
 
 // Si el nuevo cupo de un rol queda por debajo de cuánta gente ya tiene
 // licencia de ese rol, se le quita la licencia a quien la tenga asignada
@@ -14,7 +15,7 @@ import { requireSuperAdmin } from "../../_lib/auth.js";
 // detiene dejando 1 — misma garantía que ya existe para el quite manual (ver
 // api/usuarios/[id].js), así nunca se bloquea a una organización entera sin
 // nadie que pueda entrar a arreglarlo.
-async function autoRevocarSobreCupo(usuariosCol, organizacionId, licenciasNuevas) {
+export async function autoRevocarSobreCupo(usuariosCol, organizacionId, licenciasNuevas) {
   const revocados = { admin: [], reclutador: [] };
 
   for (const rol of ["admin", "reclutador"]) {
@@ -42,7 +43,7 @@ async function autoRevocarSobreCupo(usuariosCol, organizacionId, licenciasNuevas
   return revocados;
 }
 
-export default async function handler(request, response) {
+async function handler(request, response) {
   if (!requireSuperAdmin(request, response)) return;
 
   if (request.method !== "PATCH") {
@@ -89,3 +90,5 @@ export default async function handler(request, response) {
     return response.status(500).json({ error: "Error al actualizar las licencias" });
   }
 }
+
+export default conCors(handler);

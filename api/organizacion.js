@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { requireAdmin } from "./_lib/auth.js";
 import { getOrganizacionesCollection } from "./_lib/mongodb.js";
+import { conCors } from "./_lib/cors.js";
 
 const NOMBRE_MAX = 60;
 const LOGO_URL_MAX = 500;
@@ -9,7 +10,7 @@ const LOGO_URL_MAX = 500;
 // A propósito acotado a esto — nada de colores ni layout — para que cada
 // cliente vea su nombre en el dashboard y en el agente de voz sin tocar la
 // identidad visual del producto en sí.
-export default async function handler(request, response) {
+async function handler(request, response) {
   if (request.method !== "PATCH") {
     return response.status(405).json({ error: "Método no permitido" });
   }
@@ -61,3 +62,5 @@ export default async function handler(request, response) {
     response.status(500).json({ error: "Error al actualizar la organización." });
   }
 }
+
+export default conCors(handler);

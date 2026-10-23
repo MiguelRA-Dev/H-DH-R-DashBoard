@@ -7,11 +7,12 @@ import {
   crearTokenSesion,
   escribirCookieSesion,
 } from "../_lib/auth.js";
+import { conCors } from "../_lib/cors.js";
 
 // Cualquier usuario autenticado cambia su propia contraseña acá — tanto para
 // el caso forzado (después de un reseteo por un admin, ver api/usuarios/[id].js)
 // como si simplemente quiere cambiarla por su cuenta.
-export default async function handler(request, response) {
+async function handler(request, response) {
   if (request.method !== "POST") {
     return response.status(405).json({ error: "Método no permitido" });
   }
@@ -52,3 +53,5 @@ export default async function handler(request, response) {
     response.status(500).json({ error: "Error al cambiar la contraseña." });
   }
 }
+
+export default conCors(handler);

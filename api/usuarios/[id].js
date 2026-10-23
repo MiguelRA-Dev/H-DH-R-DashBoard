@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { getUsuariosCollection, getOrganizacionesCollection } from "../_lib/mongodb.js";
 import { requireAdmin, hashPassword } from "../_lib/auth.js";
+import { conCors } from "../_lib/cors.js";
 
 // Reseteo manual de contraseña: en vez de un flujo de "olvidé mi contraseña"
 // por correo (que requeriría un proveedor de email nuevo), o de generar una
@@ -13,7 +14,7 @@ import { requireAdmin, hashPassword } from "../_lib/auth.js";
 // asignarLicencia/quitarLicencia: el admin prende/apaga el acceso real de
 // una cuenta ya creada (ver api/usuarios/index.js — crear ya no depende del
 // cupo, solo asignar licencia sí).
-export default async function handler(request, response) {
+async function handler(request, response) {
   const admin = requireAdmin(request, response);
   if (!admin) return;
 
@@ -133,3 +134,5 @@ export default async function handler(request, response) {
 
   return response.status(400).json({ error: "Acción no reconocida." });
 }
+
+export default conCors(handler);

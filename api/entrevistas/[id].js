@@ -1,10 +1,11 @@
 import { ObjectId } from "mongodb";
 import { getEntrevistasCollection, getVacantesCollection } from "../_lib/mongodb.js";
 import { requireLicencia } from "../_lib/auth.js";
+import { conCors } from "../_lib/cors.js";
 
 const ESTADOS_PROCESO_VALIDOS = ["pendiente", "en_revision", "contratado", "descartado"];
 
-export default async function handler(request, response) {
+async function handler(request, response) {
   const usuario = requireLicencia(request, response);
   if (!usuario) return;
 
@@ -134,3 +135,5 @@ export default async function handler(request, response) {
 
   return response.status(405).json({ error: "Método no permitido" });
 }
+
+export default conCors(handler);

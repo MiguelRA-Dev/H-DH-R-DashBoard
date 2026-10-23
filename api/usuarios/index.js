@@ -1,8 +1,9 @@
 import { ObjectId } from "mongodb";
 import { getUsuariosCollection, getOrganizacionesCollection } from "../_lib/mongodb.js";
 import { hashPassword, requireLicencia, requireAdmin, ROLES_VALIDOS } from "../_lib/auth.js";
+import { conCors } from "../_lib/cors.js";
 
-export default async function handler(request, response) {
+async function handler(request, response) {
   if (request.method === "GET") {
     const usuario = requireLicencia(request, response);
     if (!usuario) return;
@@ -116,3 +117,5 @@ export default async function handler(request, response) {
 
   return response.status(405).json({ error: "Método no permitido" });
 }
+
+export default conCors(handler);

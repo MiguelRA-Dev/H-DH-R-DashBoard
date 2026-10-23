@@ -1,11 +1,12 @@
 import { ObjectId } from "mongodb";
 import { requireAuth } from "../_lib/auth.js";
 import { getOrganizacionesCollection } from "../_lib/mongodb.js";
+import { conCors } from "../_lib/cors.js";
 
 // Se aprovecha esta llamada (ya se hace una vez al cargar el dashboard) para
 // traer también el nombre/logo de la organización — evita un segundo
 // round-trip solo para pintar la marca en el encabezado.
-export default async function handler(request, response) {
+async function handler(request, response) {
   if (request.method !== "GET") {
     return response.status(405).json({ error: "Método no permitido" });
   }
@@ -33,3 +34,5 @@ export default async function handler(request, response) {
     response.status(500).json({ error: "Error al obtener la sesión" });
   }
 }
+
+export default conCors(handler);

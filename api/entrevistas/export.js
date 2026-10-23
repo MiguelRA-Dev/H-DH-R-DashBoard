@@ -3,6 +3,7 @@ import { getEntrevistasCollection } from "../_lib/mongodb.js";
 import { buildEntrevistasFilter } from "../_lib/filters.js";
 import { toCsv } from "../_lib/csv.js";
 import { requireLicencia } from "../_lib/auth.js";
+import { conCors } from "../_lib/cors.js";
 
 const COLUMNS = [
   { label: "Candidato", value: (e) => e.candidato },
@@ -17,7 +18,7 @@ const COLUMNS = [
   { label: "Fecha", value: (e) => (e.creadoEn ? new Date(e.creadoEn).toISOString() : "") },
 ];
 
-export default async function handler(request, response) {
+async function handler(request, response) {
   if (request.method !== "GET") {
     return response.status(405).json({ error: "Método no permitido" });
   }
@@ -46,3 +47,5 @@ export default async function handler(request, response) {
     response.status(500).json({ error: "Error al exportar entrevistas" });
   }
 }
+
+export default conCors(handler);

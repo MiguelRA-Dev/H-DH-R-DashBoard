@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { getVacantesCollection } from "../_lib/mongodb.js";
 import { requireLicencia, requireAdmin } from "../_lib/auth.js";
+import { conCors } from "../_lib/cors.js";
 
 const ESTADOS_VALIDOS = ["abierta", "pausada", "cerrada"];
 const IDIOMAS_VALIDOS = ["es", "en"];
@@ -19,7 +20,7 @@ const CAMPOS_EDITABLES = [
 // completo antes/después (crecería el documento sin límite con cada edición).
 const CAMPOS_SIN_VALOR_EN_HISTORIAL = ["descripcion", "requisitos"];
 
-export default async function handler(request, response) {
+async function handler(request, response) {
   const usuario = requireLicencia(request, response);
   if (!usuario) return;
 
@@ -111,3 +112,5 @@ export default async function handler(request, response) {
 
   return response.status(405).json({ error: "Método no permitido" });
 }
+
+export default conCors(handler);

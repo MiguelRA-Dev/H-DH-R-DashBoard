@@ -2,11 +2,12 @@ import { ObjectId } from "mongodb";
 import { getVacantesCollection } from "../_lib/mongodb.js";
 import { buildVacantesFilter } from "../_lib/filters.js";
 import { requireLicencia } from "../_lib/auth.js";
+import { conCors } from "../_lib/cors.js";
 
 const ESTADOS_VALIDOS = ["abierta", "pausada", "cerrada"];
 const IDIOMAS_VALIDOS = ["es", "en"];
 
-export default async function handler(request, response) {
+async function handler(request, response) {
   const usuario = requireLicencia(request, response);
   if (!usuario) return;
 
@@ -71,3 +72,5 @@ export default async function handler(request, response) {
 
   return response.status(405).json({ error: "Método no permitido" });
 }
+
+export default conCors(handler);

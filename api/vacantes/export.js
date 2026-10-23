@@ -4,6 +4,7 @@ import { buildVacantesFilter } from "../_lib/filters.js";
 import { toCsv } from "../_lib/csv.js";
 import { formatModalidad } from "../_lib/modalidad.js";
 import { requireLicencia } from "../_lib/auth.js";
+import { conCors } from "../_lib/cors.js";
 
 const COLUMNS = [
   { label: "Título", value: (v) => v.titulo },
@@ -15,7 +16,7 @@ const COLUMNS = [
   { label: "Fecha creación", value: (v) => (v.creadoEn ? new Date(v.creadoEn).toISOString() : "") },
 ];
 
-export default async function handler(request, response) {
+async function handler(request, response) {
   if (request.method !== "GET") {
     return response.status(405).json({ error: "Método no permitido" });
   }
@@ -44,3 +45,5 @@ export default async function handler(request, response) {
     response.status(500).json({ error: "Error al exportar vacantes" });
   }
 }
+
+export default conCors(handler);
