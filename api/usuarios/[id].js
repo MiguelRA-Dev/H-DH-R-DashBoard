@@ -1,12 +1,14 @@
 import { ObjectId } from "mongodb";
 import { getUsuariosCollection, getOrganizacionesCollection } from "../_lib/mongodb.js";
-import { requireAdmin, hashPassword, generarPasswordTemporal } from "../_lib/auth.js";
+import { requireAdmin, hashPassword } from "../_lib/auth.js";
 
 // Reseteo manual de contraseña: en vez de un flujo de "olvidé mi contraseña"
-// por correo (que requeriría un proveedor de email nuevo), un admin genera
-// acá una contraseña temporal y se la comparte a la persona por fuera del
-// dashboard (WhatsApp, en persona, etc.). Queda marcada con
-// debeCambiarPassword para que el login la obligue a poner una propia.
+// por correo (que requeriría un proveedor de email nuevo), o de generar una
+// clave temporal al azar que hay que leer y transcribir bien, el admin
+// escribe acá directamente la contraseña nueva de la persona y se la dice
+// por fuera del dashboard (WhatsApp, en persona, etc.). No queda marcada
+// como temporal — es la contraseña real desde ya, la persona no tiene que
+// cambiarla en su próximo ingreso.
 //
 // asignarLicencia/quitarLicencia: el admin prende/apaga el acceso real de
 // una cuenta ya creada (ver api/usuarios/index.js — crear ya no depende del
@@ -29,17 +31,20 @@ export default async function handler(request, response) {
   const coleccion = await getUsuariosCollection();
 
   if (body.accion === "resetPassword") {
+    const nuevaPassword = body.nuevaPassword || "";
+    if (nuevaPassword.length < 8) {
+      return response.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
+    }
     try {
-      const passwordTemporal = generarPasswordTemporal();
       const usuario = await coleccion.findOneAndUpdate(
         { _id: new ObjectId(id), organizacionId },
-        { $set: { passwordHash: hashPassword(passwordTemporal), debeCambiarPassword: true } },
+        { $set: { passwordHash: hashPassword(nuevaPassword), debeCambiarPassword: false } },
         { returnDocument: "after", projection: { passwordHash: 0 } }
       );
       if (!usuario) {
         return response.status(404).json({ error: "Usuario no encontrado." });
       }
-      return response.status(200).json({ usuario, passwordTemporal });
+      return response.status(200).json({ usuario });
     } catch (error) {
       console.error(error);
       return response.status(500).json({ error: "Error al restablecer la contraseña." });

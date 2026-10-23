@@ -2137,6 +2137,34 @@ button.danger-outline:hover {
   margin-bottom: 4px;
 }
 
+.reset-password-inline {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.reset-password-inline .password-input input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 32px 8px 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  width: 100%;
+}
+
+.reset-password-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 @media (max-width: 560px) {
   .superadmin-topbar { padding: 16px 18px; }
   .superadmin-content { padding: 20px 16px 40px; }

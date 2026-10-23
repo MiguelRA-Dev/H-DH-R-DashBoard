@@ -34,8 +34,8 @@ export function crearUsuario(data) {
   return request("/api/usuarios", json("POST", data));
 }
 
-export function resetearPasswordUsuario(id) {
-  return request(`/api/usuarios/${id}`, json("PATCH", { accion: "resetPassword" }));
+export function resetearPasswordUsuario(id, nuevaPassword) {
+  return request(`/api/usuarios/${id}`, json("PATCH", { accion: "resetPassword", nuevaPassword }));
 }
 
 export function asignarLicenciaUsuario(id) {

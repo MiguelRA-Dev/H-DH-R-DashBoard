@@ -48,8 +48,10 @@ export default function Usuarios({ usuarioActual }) {
   const [values, setValues] = useState(CAMPOS_VACIOS);
   const [creando, setCreando] = useState(false);
   const [formError, setFormError] = useState(null);
-  const [reseteando, setReseteando] = useState(null);
-  const [passwordGenerada, setPasswordGenerada] = useState(null);
+  const [reseteandoId, setReseteandoId] = useState(null);
+  const [nuevaPassword, setNuevaPassword] = useState("");
+  const [guardandoReset, setGuardandoReset] = useState(false);
+  const [resetError, setResetError] = useState(null);
   const [cambiandoLicencia, setCambiandoLicencia] = useState(null);
   const [marca, setMarca] = useState({
     nombre: usuarioActual?.organizacion?.nombre || "",
@@ -123,23 +125,29 @@ export default function Usuarios({ usuarioActual }) {
     }
   };
 
-  const handleReset = async (usuario) => {
-    if (
-      !window.confirm(
-        `¿Restablecer la contraseña de ${usuario.nombre}? Va a necesitar la contraseña temporal para volver a entrar.`
-      )
-    ) {
+  const abrirReset = (id) => {
+    setReseteandoId(id);
+    setNuevaPassword("");
+    setResetError(null);
+  };
+
+  const handleResetSubmit = async (e, usuario) => {
+    e.preventDefault();
+    setResetError(null);
+    if (nuevaPassword.length < 8) {
+      setResetError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
-    setReseteando(usuario._id);
-    setPasswordGenerada(null);
+    setGuardandoReset(true);
     try {
-      const { passwordTemporal } = await resetearPasswordUsuario(usuario._id);
-      setPasswordGenerada({ nombre: usuario.nombre, password: passwordTemporal });
+      await resetearPasswordUsuario(usuario._id, nuevaPassword);
+      setReseteandoId(null);
+      setNuevaPassword("");
+      cargar();
     } catch (err) {
-      setError(err.message);
+      setResetError(err.message);
     } finally {
-      setReseteando(null);
+      setGuardandoReset(false);
     }
   };
 
@@ -169,31 +177,6 @@ export default function Usuarios({ usuarioActual }) {
       </div>
 
       {error && <ErrorState message={error} onRetry={cargar} />}
-
-      {passwordGenerada && (
-        <div className="temp-password-banner">
-          <div>
-            <strong>Contraseña temporal para {passwordGenerada.nombre}:</strong>{" "}
-            <code>{passwordGenerada.password}</code>
-            <p className="temp-password-hint">
-              Se muestra una sola vez — compártela ahora por fuera del dashboard. Le va a pedir
-              cambiarla en su próximo ingreso.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => {
-              navigator.clipboard?.writeText(passwordGenerada.password);
-            }}
-          >
-            Copiar
-          </button>
-          <button type="button" className="link-button" onClick={() => setPasswordGenerada(null)}>
-            Cerrar
-          </button>
-        </div>
-      )}
 
       {!usuarios && !error && <div className="loading-state">Cargando usuarios…</div>}
 
@@ -292,16 +275,44 @@ export default function Usuarios({ usuarioActual }) {
                           label={`${tieneLicencia(u) ? "Quitar" : "Asignar"} licencia a ${u.nombre}`}
                         />
                       </div>
-                      {u._id !== miId && (
-                        <button
-                          type="button"
-                          className="link-button usuario-action"
-                          disabled={reseteando === u._id}
-                          onClick={() => handleReset(u)}
-                        >
-                          {reseteando === u._id ? "Restableciendo…" : "Restablecer contraseña"}
-                        </button>
-                      )}
+                      {u._id !== miId &&
+                        (reseteandoId === u._id ? (
+                          <form
+                            className="reset-password-inline"
+                            onSubmit={(e) => handleResetSubmit(e, u)}
+                          >
+                            {resetError && <div className="setup-error">{resetError}</div>}
+                            <PasswordInput
+                              value={nuevaPassword}
+                              onChange={(e) => setNuevaPassword(e.target.value)}
+                              placeholder="Contraseña nueva"
+                              minLength={8}
+                              autoFocus
+                              required
+                            />
+                            <div className="reset-password-actions">
+                              <button type="submit" className="primary compact" disabled={guardandoReset}>
+                                {guardandoReset ? "Guardando…" : "Guardar"}
+                              </button>
+                              <button
+                                type="button"
+                                className="link-button"
+                                onClick={() => setReseteandoId(null)}
+                                disabled={guardandoReset}
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <button
+                            type="button"
+                            className="link-button usuario-action"
+                            onClick={() => abrirReset(u._id)}
+                          >
+                            Restablecer contraseña
+                          </button>
+                        ))}
                     </div>
                   )}
                 </div>
