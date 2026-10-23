@@ -1355,13 +1355,17 @@ button.danger-outline:hover {
 }
 
 .usuario-card {
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.usuario-card-row {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: var(--surface);
-  border-radius: 14px;
   padding: 14px 16px;
-  box-shadow: var(--card-shadow);
 }
 
 .usuario-avatar {
@@ -1516,13 +1520,19 @@ button.danger-outline:hover {
 }
 
 @media (max-width: 560px) {
-  .usuario-card {
+  .usuario-card-row {
     flex-wrap: wrap;
   }
   .usuario-actions-col {
     width: 100%;
     align-items: stretch;
     margin-left: 56px;
+  }
+  .reset-password-panel-row {
+    flex-wrap: wrap;
+  }
+  .reset-password-panel-row .password-input {
+    flex-basis: 100%;
   }
 }
 
@@ -2137,32 +2147,92 @@ button.danger-outline:hover {
   margin-bottom: 4px;
 }
 
-.reset-password-inline {
-  width: 220px;
+.reset-password-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  padding: 16px 18px;
+  border-top: 1px solid var(--border);
   background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
 }
 
-.reset-password-inline .password-input input {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 8px;
-  padding: 8px 32px 8px 10px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  width: 100%;
+.reset-password-panel-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0;
 }
 
-.reset-password-actions {
+.reset-password-panel-row {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.reset-password-panel-row .password-input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.reset-password-panel-row .password-input input {
+  width: 100%;
+  height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0 40px 0 14px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+}
+
+.reset-password-panel-row .password-input input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.reset-password-panel-row .password-toggle {
+  color: var(--text-dim);
+}
+
+.reset-password-panel-row button.primary.compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 18px;
+  flex-shrink: 0;
+}
+
+.reset-password-panel-cancel {
+  height: 40px;
+  padding: 0 14px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.reset-password-panel-cancel:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.reset-password-panel-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 560px) {

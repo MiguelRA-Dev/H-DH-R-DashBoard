@@ -238,73 +238,45 @@ export default function Usuarios({ usuarioActual }) {
             <div className="usuarios-list">
               {usuarios.map((u) => (
                 <div className="usuario-card" key={u._id}>
-                  <span className="usuario-avatar" aria-hidden="true">
-                    {iniciales(u.nombre)}
-                  </span>
+                  <div className="usuario-card-row">
+                    <span className="usuario-avatar" aria-hidden="true">
+                      {iniciales(u.nombre)}
+                    </span>
 
-                  <div className="usuario-info">
-                    <p className="usuario-name">{u.nombre}</p>
-                    <p className="usuario-email">{u.email}</p>
-                    <div className="usuario-meta">
-                      {u.cargo && <span>{u.cargo}</span>}
-                      {u.telefono && <span>{u.telefono}</span>}
-                      <span className={`rol-badge rol-badge-${u.rol || "admin"}`}>
-                        {ROL_LABEL[u.rol] || "Admin"}
-                      </span>
-                      <span className={`licencia-estado ${tieneLicencia(u) ? "con-licencia" : "sin-licencia"}`}>
-                        <span className="licencia-dot" />
-                        {tieneLicencia(u) ? "Con licencia" : "Sin licencia"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {esAdmin && (
-                    <div className="usuario-actions-col">
-                      <div className="toggle-row">
-                        <span className="toggle-row-label">
-                          {cambiandoLicencia === u._id ? "Guardando…" : "Licencia"}
+                    <div className="usuario-info">
+                      <p className="usuario-name">{u.nombre}</p>
+                      <p className="usuario-email">{u.email}</p>
+                      <div className="usuario-meta">
+                        {u.cargo && <span>{u.cargo}</span>}
+                        {u.telefono && <span>{u.telefono}</span>}
+                        <span className={`rol-badge rol-badge-${u.rol || "admin"}`}>
+                          {ROL_LABEL[u.rol] || "Admin"}
                         </span>
-                        <Toggle
-                          checked={tieneLicencia(u)}
-                          disabled={
-                            cambiandoLicencia === u._id ||
-                            (!tieneLicencia(u) &&
-                              (u.rol === "admin" ? usoAdmin >= licencias.admin : usoReclutador >= licencias.reclutador))
-                          }
-                          onChange={() => handleToggleLicencia(u)}
-                          label={`${tieneLicencia(u) ? "Quitar" : "Asignar"} licencia a ${u.nombre}`}
-                        />
+                        <span className={`licencia-estado ${tieneLicencia(u) ? "con-licencia" : "sin-licencia"}`}>
+                          <span className="licencia-dot" />
+                          {tieneLicencia(u) ? "Con licencia" : "Sin licencia"}
+                        </span>
                       </div>
-                      {u._id !== miId &&
-                        (reseteandoId === u._id ? (
-                          <form
-                            className="reset-password-inline"
-                            onSubmit={(e) => handleResetSubmit(e, u)}
-                          >
-                            {resetError && <div className="setup-error">{resetError}</div>}
-                            <PasswordInput
-                              value={nuevaPassword}
-                              onChange={(e) => setNuevaPassword(e.target.value)}
-                              placeholder="Contraseña nueva"
-                              minLength={8}
-                              autoFocus
-                              required
-                            />
-                            <div className="reset-password-actions">
-                              <button type="submit" className="primary compact" disabled={guardandoReset}>
-                                {guardandoReset ? "Guardando…" : "Guardar"}
-                              </button>
-                              <button
-                                type="button"
-                                className="link-button"
-                                onClick={() => setReseteandoId(null)}
-                                disabled={guardandoReset}
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          </form>
-                        ) : (
+                    </div>
+
+                    {esAdmin && (
+                      <div className="usuario-actions-col">
+                        <div className="toggle-row">
+                          <span className="toggle-row-label">
+                            {cambiandoLicencia === u._id ? "Guardando…" : "Licencia"}
+                          </span>
+                          <Toggle
+                            checked={tieneLicencia(u)}
+                            disabled={
+                              cambiandoLicencia === u._id ||
+                              (!tieneLicencia(u) &&
+                                (u.rol === "admin" ? usoAdmin >= licencias.admin : usoReclutador >= licencias.reclutador))
+                            }
+                            onChange={() => handleToggleLicencia(u)}
+                            label={`${tieneLicencia(u) ? "Quitar" : "Asignar"} licencia a ${u.nombre}`}
+                          />
+                        </div>
+                        {u._id !== miId && reseteandoId !== u._id && (
                           <button
                             type="button"
                             className="link-button usuario-action"
@@ -312,8 +284,37 @@ export default function Usuarios({ usuarioActual }) {
                           >
                             Restablecer contraseña
                           </button>
-                        ))}
-                    </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {esAdmin && u._id !== miId && reseteandoId === u._id && (
+                    <form className="reset-password-panel" onSubmit={(e) => handleResetSubmit(e, u)}>
+                      <p className="reset-password-panel-label">Restablecer contraseña</p>
+                      {resetError && <div className="setup-error">{resetError}</div>}
+                      <div className="reset-password-panel-row">
+                        <PasswordInput
+                          value={nuevaPassword}
+                          onChange={(e) => setNuevaPassword(e.target.value)}
+                          placeholder="Mínimo 8 caracteres"
+                          minLength={8}
+                          autoFocus
+                          required
+                        />
+                        <button type="submit" className="primary compact" disabled={guardandoReset}>
+                          {guardandoReset ? "Guardando…" : "Guardar"}
+                        </button>
+                        <button
+                          type="button"
+                          className="reset-password-panel-cancel"
+                          onClick={() => setReseteandoId(null)}
+                          disabled={guardandoReset}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
                   )}
                 </div>
               ))}
