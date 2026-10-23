@@ -1362,7 +1362,6 @@ button.danger-outline:hover {
   background: var(--surface);
   border-radius: 14px;
   box-shadow: var(--card-shadow);
-  overflow: hidden;
   min-width: 0;
 }
 
@@ -2159,6 +2158,12 @@ button.danger-outline:hover {
   padding: 16px 18px;
   border-top: 1px solid var(--border);
   background: var(--surface-2);
+  /* Mismo radio que .usuario-card, aplicado acá en vez de recortar con
+     overflow: hidden en la tarjeta — ese overflow no volvía a calcular bien
+     el clip cuando el panel cambiaba de alto al abrirse, y terminaba
+     cortando el borde del campo de contraseña a mitad de render. */
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
 }
 
 .reset-password-panel-label {
