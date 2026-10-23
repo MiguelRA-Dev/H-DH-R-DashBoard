@@ -93,11 +93,11 @@ function FormularioLicencias({ organizacion, onGuardado, onCancelar }) {
     setError(null);
     setGuardando(true);
     try {
-      await actualizarLicencias(organizacion.id, {
+      const data = await actualizarLicencias(organizacion.id, {
         admins: Number(admins),
         reclutadores: Number(reclutadores),
       });
-      onGuardado();
+      onGuardado(data.revocados);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -147,6 +147,7 @@ export default function Superadmin() {
   const [formError, setFormError] = useState(null);
   const [resultado, setResultado] = useState(null);
   const [editandoId, setEditandoId] = useState(null);
+  const [revocadosRecientes, setRevocadosRecientes] = useState(null);
 
   useEffect(() => {
     getMeSuperadmin()
@@ -227,6 +228,33 @@ export default function Superadmin() {
               Copiar
             </button>
             <button type="button" className="link-button" onClick={() => setResultado(null)}>
+              Cerrar
+            </button>
+          </div>
+        )}
+
+        {revocadosRecientes && (
+          <div className="temp-password-banner">
+            <div>
+              <strong>
+                El nuevo cupo de {revocadosRecientes.organizacion} quedó por debajo de lo que ya
+                estaba en uso — se le quitó la licencia a quien la tenía asignada hace menos
+                tiempo, hasta volver a caber:
+              </strong>
+              <ul className="revocados-list">
+                {revocadosRecientes.revocados.admin.map((u) => (
+                  <li key={u.id}>
+                    {u.nombre} ({u.email}) — admin
+                  </li>
+                ))}
+                {revocadosRecientes.revocados.reclutador.map((u) => (
+                  <li key={u.id}>
+                    {u.nombre} ({u.email}) — reclutador
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <button type="button" className="link-button" onClick={() => setRevocadosRecientes(null)}>
               Cerrar
             </button>
           </div>
@@ -323,8 +351,10 @@ export default function Superadmin() {
                 {editandoId === org.id && (
                   <FormularioLicencias
                     organizacion={org}
-                    onGuardado={() => {
+                    onGuardado={(revocados) => {
                       setEditandoId(null);
+                      const total = (revocados?.admin?.length || 0) + (revocados?.reclutador?.length || 0);
+                      setRevocadosRecientes(total > 0 ? { organizacion: org.nombre, revocados } : null);
                       cargar();
                     }}
                     onCancelar={() => setEditandoId(null)}

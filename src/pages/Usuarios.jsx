@@ -3,6 +3,7 @@ import Select from "../components/Select";
 import ErrorState from "../components/ErrorState";
 import PasswordInput from "../components/PasswordInput";
 import LicenciaBarra from "../components/LicenciaBarra";
+import Toggle from "../components/Toggle";
 import {
   getUsuarios,
   crearUsuario,
@@ -276,18 +277,21 @@ export default function Usuarios({ usuarioActual }) {
 
                   {esAdmin && (
                     <div className="usuario-actions-col">
-                      <button
-                        type="button"
-                        className="link-button usuario-action"
-                        disabled={cambiandoLicencia === u._id}
-                        onClick={() => handleToggleLicencia(u)}
-                      >
-                        {cambiandoLicencia === u._id
-                          ? "Guardando…"
-                          : tieneLicencia(u)
-                          ? "Quitar licencia"
-                          : "Asignar licencia"}
-                      </button>
+                      <div className="toggle-row">
+                        <span className="toggle-row-label">
+                          {cambiandoLicencia === u._id ? "Guardando…" : "Licencia"}
+                        </span>
+                        <Toggle
+                          checked={tieneLicencia(u)}
+                          disabled={
+                            cambiandoLicencia === u._id ||
+                            (!tieneLicencia(u) &&
+                              (u.rol === "admin" ? usoAdmin >= licencias.admin : usoReclutador >= licencias.reclutador))
+                          }
+                          onChange={() => handleToggleLicencia(u)}
+                          label={`${tieneLicencia(u) ? "Quitar" : "Asignar"} licencia a ${u.nombre}`}
+                        />
+                      </div>
                       {u._id !== miId && (
                         <button
                           type="button"
@@ -347,20 +351,22 @@ export default function Usuarios({ usuarioActual }) {
                 required
               />
 
-              <label className="checkbox-field">
-                <input
-                  type="checkbox"
+              <div className="toggle-field">
+                <Toggle
                   checked={asignarLicenciaEfectivo}
                   disabled={!hayLicenciaDisponible}
-                  onChange={(e) => setValues((v) => ({ ...v, asignarLicencia: e.target.checked }))}
+                  onChange={(val) => setValues((v) => ({ ...v, asignarLicencia: val }))}
+                  label="Asignar licencia a esta persona"
                 />
-                <span>Asignar licencia a esta persona</span>
-              </label>
-              <p className="cell-muted checkbox-hint">
-                {hayLicenciaDisponible
-                  ? "Sin esto, la cuenta queda creada pero sin acceso hasta que se le asigne una licencia."
-                  : `No hay cupo de ${values.rol === "admin" ? "administrador" : "reclutador"} disponible — la cuenta se crea sin licencia, se le puede asignar después si se libera un cupo.`}
-              </p>
+                <div>
+                  <p className="toggle-field-title">Asignar licencia a esta persona</p>
+                  <p className="cell-muted">
+                    {hayLicenciaDisponible
+                      ? "Sin esto, la cuenta queda creada pero sin acceso hasta que se le asigne una licencia."
+                      : `No hay cupo de ${values.rol === "admin" ? "administrador" : "reclutador"} disponible — la cuenta se crea sin licencia, se le puede asignar después si se libera un cupo.`}
+                  </p>
+                </div>
+              </div>
 
               <button type="submit" className="primary compact" disabled={creando}>
                 {creando ? "Creando…" : "Crear cuenta"}

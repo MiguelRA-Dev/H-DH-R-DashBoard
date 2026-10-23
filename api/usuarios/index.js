@@ -88,6 +88,11 @@ export default async function handler(request, response) {
         telefono: telefono?.trim() || "",
         rol: rolNuevo,
         licenciaAsignada,
+        // Cuándo quedó licenciada por última vez — es el criterio para elegir
+        // a quién le toca perder la licencia si el superadmin baja el cupo
+        // por debajo del uso real (ver api/superadmin/organizaciones/[id].js):
+        // se le quita primero a quien la tiene hace menos tiempo.
+        licenciaAsignadaEn: licenciaAsignada ? new Date() : null,
         debeCambiarPassword: false,
         creadoEn: new Date(),
       };

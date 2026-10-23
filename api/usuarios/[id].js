@@ -75,7 +75,7 @@ export default async function handler(request, response) {
 
       const usuario = await coleccion.findOneAndUpdate(
         { _id: new ObjectId(id), organizacionId },
-        { $set: { licenciaAsignada: true } },
+        { $set: { licenciaAsignada: true, licenciaAsignadaEn: new Date() } },
         { returnDocument: "after", projection: { passwordHash: 0 } }
       );
       return response.status(200).json({ usuario });
@@ -116,7 +116,7 @@ export default async function handler(request, response) {
 
       const usuario = await coleccion.findOneAndUpdate(
         { _id: new ObjectId(id), organizacionId },
-        { $set: { licenciaAsignada: false } },
+        { $set: { licenciaAsignada: false, licenciaAsignadaEn: null } },
         { returnDocument: "after", projection: { passwordHash: 0 } }
       );
       return response.status(200).json({ usuario });

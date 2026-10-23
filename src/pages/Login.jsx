@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { login } from "../lib/api";
+import { login, getMe } from "../lib/api";
 import PasswordInput from "../components/PasswordInput";
 import ThemeToggle from "../components/ThemeToggle";
 import LoginOrb from "../components/LoginOrb";
@@ -21,7 +21,13 @@ export default function Login({ onAutenticado }) {
     setError(null);
     setEnviando(true);
     try {
-      const usuario = await login(email.trim(), password);
+      await login(email.trim(), password);
+      // La respuesta de /api/auth/login no trae todo (ej. organizacion con
+      // sus licencias) — pedir /api/auth/me justo después da el objeto
+      // completo y evita que falte algún campo recién logueado, en vez de
+      // ir agregando campos a login.js uno por uno cada vez que se necesita
+      // uno nuevo (así se nos escapó organizacion.licencias la primera vez).
+      const usuario = await getMe();
       onAutenticado(usuario);
     } catch (err) {
       setError(err.message);
